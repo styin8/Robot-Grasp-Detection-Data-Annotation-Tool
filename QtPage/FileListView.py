@@ -35,32 +35,59 @@ class FileListView():
         # Connect Function
         self.list_widget.itemClicked.connect(self.displayImage)
         self.clear_button.clicked.connect(self.clearList)
+        self.list_widget.currentItemChanged.connect(self.displayImage)
 
     def displayImage(self, item):
+        if not item:  # 如果没有选中项，直接返回
+            return
+
         # origin image
         file_path = os.path.join(self.folder_path, item.text())
         origin = QPixmap(file_path)
-        self.ShowViewIns.origin_image.setPixmap(
-            origin.scaled(640, 480, Qt.KeepAspectRatio))
+        scaled_pixmap = origin.scaled(640, 480, Qt.KeepAspectRatio)
+        self.ShowViewIns.current_pixmap = scaled_pixmap.copy()
+        self.ShowViewIns.origin_image.setPixmap(scaled_pixmap)
 
-        # init quality image
-        self.ShowViewIns.quality, qimage = ShowView.init_label_image(640, 480)
-        self.ShowViewIns.quality_image.setPixmap(
-            QPixmap.fromImage(qimage).scaled(320, 240, Qt.KeepAspectRatio))
+        # 更新图片显示区域信息
+        self.ShowViewIns.update_image_rect()
 
-        # init angle image
-        self.ShowViewIns.angle, qimage = ShowView.init_label_image(640, 480)
-        self.ShowViewIns.angle_image.setPixmap(
-            QPixmap.fromImage(qimage).scaled(320, 240, Qt.KeepAspectRatio))
+        # 获取实际显示尺寸
+        display_rect = self.ShowViewIns.image_rect
+        if display_rect:
+            # 使用原图的实际尺寸初始化热力图
+            original_width = origin.width()
+            original_height = origin.height()
 
-        # init width image
-        self.ShowViewIns.width, qimage = ShowView.init_label_image(640, 480)
-        self.ShowViewIns.width_image.setPixmap(
-            QPixmap.fromImage(qimage).scaled(320, 240, Qt.KeepAspectRatio))
+            # init quality image
+            self.ShowViewIns.quality_map = np.zeros((original_height, original_width), dtype=np.float32)
+            quality_colored = self.ShowViewIns.apply_colormap(self.ShowViewIns.quality_map)
+            quality_qimage = QImage(quality_colored.data, original_width, original_height, original_width * 3, QImage.Format_RGB888)
+            self.ShowViewIns.quality_image.setPixmap(QPixmap.fromImage(quality_qimage))
+            self.ShowViewIns.quality_image.setFixedSize(original_width, original_height)
+
+            # init angle image
+            self.ShowViewIns.angle_map = np.zeros((original_height, original_width), dtype=np.float32)
+            angle_colored = self.ShowViewIns.apply_colormap(self.ShowViewIns.angle_map)
+            angle_qimage = QImage(angle_colored.data, original_width, original_height, original_width * 3, QImage.Format_RGB888)
+            self.ShowViewIns.angle_image.setPixmap(QPixmap.fromImage(angle_qimage))
+            self.ShowViewIns.angle_image.setFixedSize(original_width, original_height)
+
+            # init width image
+            self.ShowViewIns.width_map = np.zeros((original_height, original_width), dtype=np.float32)
+            width_colored = self.ShowViewIns.apply_colormap(self.ShowViewIns.width_map)
+            width_qimage = QImage(width_colored.data, original_width, original_height, original_width * 3, QImage.Format_RGB888)
+            self.ShowViewIns.width_image.setPixmap(QPixmap.fromImage(width_qimage))
+            self.ShowViewIns.width_image.setFixedSize(original_width, original_height)
 
     def clearList(self):
         self.list_widget.clear()
         self.ShowViewIns.origin_image.setText("Please add images and select an image :)")
-        self.ShowViewIns.quality_image.setText(" ")
-        self.ShowViewIns.angle_image.setText(" ")
-        self.ShowViewIns.width_image.setText(" ")
+        self.ShowViewIns.quality_image.clear()
+        self.ShowViewIns.angle_image.clear()
+        self.ShowViewIns.width_image.clear()
+
+    def showFirstImage(self):
+        if self.list_widget.count() > 0:
+            first_item = self.list_widget.item(0)
+            self.list_widget.setCurrentItem(first_item)
+            self.displayImage(first_item)

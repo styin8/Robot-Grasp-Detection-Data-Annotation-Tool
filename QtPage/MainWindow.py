@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         # Load layout
 
         self.ShowViewIns = ShowView()
-        self.ActionViewIns = ActionView()
+        self.ActionViewIns = ActionView(self.ShowViewIns)
         self.FileListViewIns = FileListView(self.ShowViewIns)
 
         main_layout = QHBoxLayout()
@@ -54,6 +54,9 @@ class MainWindow(QMainWindow):
             for file_path in file_paths:
                 file_name = os.path.basename(file_path)
                 self.FileListViewIns.list_widget.addItem(file_name)
+                
+            # 显示第一张图片
+            self.FileListViewIns.showFirstImage()
 
     def selectFolder(self):
         dialog = QFileDialog()
@@ -68,13 +71,15 @@ class MainWindow(QMainWindow):
             self.FileListViewIns.folder_path = folder_path
             self.FileListViewIns.list_widget.clear()
 
-            # 遍历文件夹中的内容，并添加图片文件到列表控件中
             for file_name in os.listdir(folder_path):
                 file_path = os.path.join(folder_path, file_name)
                 file_info = QFileInfo(file_path)
                 if file_info.isFile() and self.isImageFile(file_info):
                     self.FileListViewIns.list_widget.addItem(file_name)
                     self.FileListViewIns.file_path.append(file_path)
+                    
+            # 显示第一张图片
+            self.FileListViewIns.showFirstImage()
 
     def isImageFile(self, file_info):
         # 获取文件的扩展名
