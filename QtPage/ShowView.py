@@ -4,6 +4,7 @@ from PyQt5.QtGui import QPixmap, QImageReader, QImage, QFont, QPainter, QPen, QC
 import numpy as np
 from typing import Tuple
 import math
+from skimage.draw import polygon  # 添加到文件开头的导入语句中
 
 
 class ClickableLabel(QLabel):
@@ -67,7 +68,7 @@ class ShowView():
         self.width_image = QLabel()
         self.width_image.setAlignment(Qt.AlignCenter)
 
-        # 添��标签
+        # 添加标签
         self.quality_label = QLabel("Quality")
         self.quality_label.setAlignment(Qt.AlignCenter)
         self.angle_label = QLabel("Angle")
@@ -98,9 +99,9 @@ class ShowView():
         # Preview
         self.preview_groupbox = QGroupBox("Preview Image")
         self.preview_groupbox.setAlignment(Qt.AlignCenter)
-        self.preview_layout = QVBoxLayout()  # 为垂直布局
+        self.preview_layout = QVBoxLayout()  # 垂直布局
 
-        # 创建水平布局来放���览图
+        # 创建水平布局来放预览图
         self.preview_images_layout = QHBoxLayout()
         self.preview_images_layout.setAlignment(Qt.AlignCenter)
 
@@ -383,7 +384,7 @@ class ShowView():
                 # 设置为当前选中的线
                 self.current_grasp_line = grasp_line
 
-                # 重新绘制所有线段
+                # 新绘制所有线段
                 self.current_pixmap = self.temp_pixmap.copy()
                 painter = QPainter(self.current_pixmap)
 
@@ -559,7 +560,8 @@ class ShowView():
 
                     painter.drawLine(
                         int(start_x), int(start_y),
-                        int(end_x), int(end_y))
+                        int(end_x), int(end_y)
+                    )
 
             painter.end()
             self.origin_image.setPixmap(
@@ -586,8 +588,8 @@ class ShowView():
             return False
 
         # 获取图像尺寸
-        height = self.image_rect.height()
-        width = self.image_rect.width()
+        height = self.image_rect.height() // 2
+        width = self.image_rect.width() // 2
 
         # 创建热力图
         self.quality_map = np.zeros((height, width), dtype=np.float32)
@@ -612,10 +614,10 @@ class ShowView():
                 dy = (grasp_line['end'][1] -
                       grasp_line['start'][1]) / (num_points - 1)
 
-                prev_start_x, prev_start_y = None, None
-                prev_end_x, prev_end_y = None, None
+                prev_start_x_scaled, prev_start_y_scaled = None, None
+                prev_end_x_scaled, prev_end_y_scaled = None, None
 
-                # 在每个点上绘制垂直的蓝线
+                # 在每个点上绘制垂直的蓝线并更新热力图
                 for i in range(num_points):
                     # 原坐标
                     center_x = grasp_line['start'][0] + dx * i
@@ -638,30 +640,44 @@ class ShowView():
                         int(end_x), int(end_y)
                     )
 
-                    # 在两个垂直线之间填充矩形区域
-                    if i > 0:  # 从第二个点开始，连接前后两个垂直线
-                        # 计算包围四个点的矩形区域
-                        min_x = max(0, min(prev_start_x, start_x, prev_end_x, end_x))
-                        max_x = min(width - 1, max(prev_start_x, start_x, prev_end_x, end_x))
-                        min_y = max(0, min(prev_start_y, start_y, prev_end_y, end_y))
-                        max_y = min(height - 1, max(prev_start_y, start_y, prev_end_y, end_y))
+                    # 计算预览图坐标
+                    start_x_scaled = int(start_x / 2)
+                    start_y_scaled = int(start_y / 2)
+                    end_x_scaled = int(end_x / 2)
+                    end_y_scaled = int(end_y / 2)
 
-                        # 在矩形区域内填充quality和width值
-                        # 暂时移除赋值操作
-                        # for y in range(min_y, max_y + 1):
-                        #     for x in range(min_x, max_x + 1):
-                        #         # 更新quality map
-                        #         self.quality_map[y, x] = 1.0  # 使用固定值
-                        #         # 更新width map
-                        #         self.width_map[y, x] = grasp_line['perp_line']['length_ratio']
+                    # 在两个垂直线之间填充区域
+                    if i > 0:  # 从第二个点开始，连接前后两个垂直线
+                        # 创建多边形的顶点数组
+                        poly_y = np.array([
+                            prev_start_y_scaled,
+                            prev_end_y_scaled,
+                            end_y_scaled,
+                            start_y_scaled
+                        ])
+                        poly_x = np.array([
+                            prev_start_x_scaled,
+                            prev_end_x_scaled,
+                            end_x_scaled,
+                            start_x_scaled
+                        ])
+
+                        # 使用polygon函数获取多边形内的所有点
+                        rr, cc = polygon(
+                            poly_y, poly_x, shape=self.quality_map.shape)
+
+                        # 一次性更新所有点的值
+                        self.quality_map[rr, cc] = 1.0
+                        self.width_map[rr,
+                                       cc] = grasp_line['perp_line']['length_ratio']
 
                     # 更新前一个点的坐标
-                    prev_start_x, prev_start_y = start_x, start_y
-                    prev_end_x, prev_end_y = end_x, end_y
+                    prev_start_x_scaled, prev_start_y_scaled = start_x_scaled, start_y_scaled
+                    prev_end_x_scaled, prev_end_y_scaled = end_x_scaled, end_y_scaled
 
-                painter.end()
-                self.origin_image.setPixmap(
-                    self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
+            painter.end()
+            self.origin_image.setPixmap(
+                self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
 
             # 更新预览图显示
             self.update_preview_images()
@@ -671,7 +687,7 @@ class ShowView():
         """更新预览图的显示"""
         if all([self.quality_map is not None,
                 self.angle_map is not None,
-                self.width_map is not None]):
+               self.width_map is not None]):
 
             # 转换为uint8类型并应用颜色映射
             quality_colored = self.apply_colormap(self.quality_map)
@@ -684,17 +700,14 @@ class ShowView():
             quality_qimage = QImage(
                 quality_colored.data, w, h, w * 3, QImage.Format_RGB888)
             self.quality_image.setPixmap(QPixmap.fromImage(quality_qimage))
-            self.quality_image.setFixedSize(w, h)
 
             angle_qimage = QImage(angle_colored.data, w,
                                   h, w * 3, QImage.Format_RGB888)
             self.angle_image.setPixmap(QPixmap.fromImage(angle_qimage))
-            self.angle_image.setFixedSize(w, h)
 
             width_qimage = QImage(width_colored.data, w,
                                   h, w * 3, QImage.Format_RGB888)
             self.width_image.setPixmap(QPixmap.fromImage(width_qimage))
-            self.width_image.setFixedSize(w, h)
 
             # 创建并更新颜色比例尺
             self.update_colorbar(h)
@@ -797,3 +810,22 @@ class ShowView():
         painter.end()
 
         self.width_colorbar_label.setPixmap(colorbar_pixmap)
+
+    def point_in_quadrilateral(self, point, quad_points):
+        """
+        判断点是否在四边形内部
+        point: 要检查的点 [x, y]
+        quad_points: 四边形的四个顶点 [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+        """
+        def sign(p1, p2, p3):
+            return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+
+        d1 = sign(point, quad_points[0], quad_points[1])
+        d2 = sign(point, quad_points[1], quad_points[2])
+        d3 = sign(point, quad_points[2], quad_points[3])
+        d4 = sign(point, quad_points[3], quad_points[0])
+
+        has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0) or (d4 < 0)
+        has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0) or (d4 > 0)
+
+        return not (has_neg and has_pos)
