@@ -78,11 +78,16 @@ class ShowView():
 
         # 创建颜色比例尺标签
         self.colorbar_label = QLabel()
-        self.width_colorbar_label = QLabel()  # 添加width的比例尺
+        self.width_colorbar_label = QLabel()
+        self.angle_colorbar_label = QLabel()  # 新增angle比例尺标签
+
         self.colorbar_label.setFixedWidth(20)
         self.width_colorbar_label.setFixedWidth(20)
+        self.angle_colorbar_label.setFixedWidth(20)  # 设置宽度
+
         self.colorbar_label.setAlignment(Qt.AlignCenter)
         self.width_colorbar_label.setAlignment(Qt.AlignCenter)
+        self.angle_colorbar_label.setAlignment(Qt.AlignCenter)
 
         # Layout
         self.widget = QWidget()
@@ -116,7 +121,12 @@ class ShowView():
         quality_container.addWidget(self.quality_label)  # 添加标签
 
         angle_container = QVBoxLayout()
-        angle_container.addWidget(self.angle_image)
+        angle_preview = QHBoxLayout()  # 新增
+        angle_preview.addWidget(self.angle_colorbar_label)  # 新增
+        angle_preview.addWidget(self.angle_image)  # 新增
+        angle_preview.setAlignment(
+            self.angle_colorbar_label, Qt.AlignVCenter)  # 新增
+        angle_container.addLayout(angle_preview)  # 修改
         angle_container.addWidget(self.angle_label)
 
         width_container = QVBoxLayout()
@@ -149,7 +159,7 @@ class ShowView():
         # 添加一个回调函数属性
         self.on_drawing_finished = None
 
-        # 添加新的属性来存储抓取线的信息
+        # 添加新的存���抓取线的信息
         self.grasp_lines = []  # 存储所有的抓取线信息
         self.current_grasp_line = None  # 当前选中的抓取线
 
@@ -260,7 +270,7 @@ class ShowView():
                 height, width = self.quality_map.shape
                 radius = self.fine_tune_radius // 2  # 预览图上的半径（现在是5像素）
 
-                # 在圆形区域内更新值
+                # 在圆形区域内更值
                 for y in range(max(0, preview_y - radius), min(height, preview_y + radius)):
                     for x in range(max(0, preview_x - radius), min(width, preview_x + radius)):
                         # 计算到中心的距离
@@ -292,7 +302,7 @@ class ShowView():
                 # 更新当前选中的抓取线
                 self.current_grasp_line = nearest_line
 
-                # 重绘所有线段，突出显示选中的线
+                # 重绘所有线，突出显示选中的线
                 if self.current_pixmap:
                     self.current_pixmap = self.temp_pixmap.copy()
                     painter = QPainter(self.current_pixmap)
@@ -317,7 +327,7 @@ class ShowView():
                                     int(line['perp_line']['end'][1])
                                 )
 
-                    # 最后绘选中的线（使用更粗的线条）
+                    # 绘选中的线（使用更粗的线条）
                     painter.setPen(QPen(Qt.red, 4, Qt.SolidLine))
                     painter.drawLine(
                         int(self.current_grasp_line['start'][0]),
@@ -421,7 +431,7 @@ class ShowView():
                 self.origin_image.setPixmap(
                     self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
 
-                # 保存当前图片状态
+                # 保存当前图片状
                 self.temp_pixmap = self.current_pixmap.copy()
 
                 print(f"Added new grasp line from {
@@ -435,7 +445,7 @@ class ShowView():
                 self.on_drawing_finished()
 
     def draw_perpendicular_line(self, length_ratio=0.25):
-        """在当前选中的抓取线中心绘制垂直线"""
+        """在当前选中抓取线中心绘制垂直线"""
         if not self.current_grasp_line:
             return False
 
@@ -587,14 +597,25 @@ class ShowView():
         if not self.image_rect or not self.grasp_lines:
             return False
 
-        # 获取图像尺寸
-        height = self.image_rect.height() // 2
-        width = self.image_rect.width() // 2
+        # 获取原图尺寸
+        original_height = self.current_pixmap.height()
+        original_width = self.current_pixmap.width()
 
-        # 创建热力图
-        self.quality_map = np.zeros((height, width), dtype=np.float32)
-        self.angle_map = np.zeros((height, width), dtype=np.float32)  # 全部置0
-        self.width_map = np.zeros((height, width), dtype=np.float32)  # 全部置0
+        # 获取预览图尺寸
+        preview_height = original_height // 2
+        preview_width = original_width // 2
+
+        # 创建热力图（使用预览图尺寸）
+        self.quality_map = np.zeros(
+            (preview_height, preview_width), dtype=np.float32)
+        self.angle_map = np.zeros(
+            (preview_height, preview_width), dtype=np.float32)
+        self.width_map = np.zeros(
+            (preview_width, preview_width), dtype=np.float32)
+
+        # 用于跟踪最大值
+        max_angle = float('-inf')
+        max_width = float('-inf')
 
         # 在原图上绘制中心轴上的蓝线
         if self.current_pixmap:
@@ -614,8 +635,23 @@ class ShowView():
                 dy = (grasp_line['end'][1] -
                       grasp_line['start'][1]) / (num_points - 1)
 
-                prev_start_x_scaled, prev_start_y_scaled = None, None
-                prev_end_x_scaled, prev_end_y_scaled = None, None
+                # 计算中心轴与x轴正方向的夹角
+                dx_axis = grasp_line['end'][0] - grasp_line['start'][0]  # x轴方向的差值
+                dy_axis = -(grasp_line['end'][1] - grasp_line['start'][1])  # y轴方向的差值，注意加负号因为图像坐标系y轴向下
+                angle_rad = math.atan2(dy_axis, dx_axis)  # 计算与x轴正方向的夹角
+                angle_deg = math.degrees(angle_rad)  # 转换为角度
+
+                # 确保角度在-90到90度之间
+                if angle_deg > 90:
+                    angle_deg = angle_deg - 180
+                elif angle_deg < -90:
+                    angle_deg = angle_deg + 180
+
+                # 更新最大角度值
+                max_angle = max(max_angle, abs(angle_deg))
+
+                prev_start_x, prev_start_y = None, None
+                prev_end_x, prev_end_y = None, None
 
                 # 在每个点上绘制垂直的蓝线并更新热力图
                 for i in range(num_points):
@@ -634,46 +670,47 @@ class ShowView():
                     end_x = center_x + half_length * math.cos(perp_angle)
                     end_y = center_y + half_length * math.sin(perp_angle)
 
+                    # 更新最大宽度值
+                    max_width = max(max_width, perp_length)
+
                     # 绘制垂直线（原图）
                     painter.drawLine(
                         int(start_x), int(start_y),
                         int(end_x), int(end_y)
                     )
 
-                    # 计算预览图坐标
-                    start_x_scaled = int(start_x / 2)
-                    start_y_scaled = int(start_y / 2)
-                    end_x_scaled = int(end_x / 2)
-                    end_y_scaled = int(end_y / 2)
-
                     # 在两个垂直线之间填充区域
                     if i > 0:  # 从第二个点开始，连接前后两个垂直线
-                        # 创建多边形的顶点数组
+                        # 创建多边形的顶点数组（缩放到预览图尺寸）
                         poly_y = np.array([
-                            prev_start_y_scaled,
-                            prev_end_y_scaled,
-                            end_y_scaled,
-                            start_y_scaled
+                            int(prev_start_y * preview_height / original_height),
+                            int(prev_end_y * preview_height / original_height),
+                            int(end_y * preview_height / original_height),
+                            int(start_y * preview_height / original_height)
                         ])
                         poly_x = np.array([
-                            prev_start_x_scaled,
-                            prev_end_x_scaled,
-                            end_x_scaled,
-                            start_x_scaled
+                            int(prev_start_x * preview_width / original_width),
+                            int(prev_end_x * preview_width / original_width),
+                            int(end_x * preview_width / original_width),
+                            int(start_x * preview_width / original_width)
                         ])
 
-                        # 使用polygon函数获取多边形内的所有点
+                        # ���用polygon函数获取多边形内的所有点
                         rr, cc = polygon(
-                            poly_y, poly_x, shape=self.quality_map.shape)
+                            poly_y, poly_x, shape=(preview_height, preview_width))
 
                         # 一次性更新所有点的值
-                        self.quality_map[rr, cc] = 1.0
-                        self.width_map[rr,
-                                       cc] = grasp_line['perp_line']['length_ratio']
+                        self.quality_map[rr, cc] = 1.0  # quality保持归一化
+                        self.width_map[rr, cc] = perp_length  # width使用实际长度
+                        # angle使用实际角度（与x轴正方向的夹角）
+                        self.angle_map[rr, cc] = angle_deg
 
                     # 更新前一个点的坐标
-                    prev_start_x_scaled, prev_start_y_scaled = start_x_scaled, start_y_scaled
-                    prev_end_x_scaled, prev_end_y_scaled = end_x_scaled, end_y_scaled
+                    prev_start_x, prev_start_y = start_x, start_y
+                    prev_end_x, prev_end_y = end_x, end_y
+
+            print(f"最大角度值: {angle_deg:.2f}°")
+            print(f"最大宽度值: {perp_length:.2f}")
 
             painter.end()
             self.origin_image.setPixmap(
@@ -687,9 +724,9 @@ class ShowView():
         """更新预览图的显示"""
         if all([self.quality_map is not None,
                 self.angle_map is not None,
-               self.width_map is not None]):
+                self.width_map is not None]):
 
-            # 转换为uint8类型并应用颜色映射
+            # 转换为uint8类型并应用颜��映射
             quality_colored = self.apply_colormap(self.quality_map)
             angle_colored = self.apply_colormap(self.angle_map)
             width_colored = self.apply_colormap(self.width_map)
@@ -712,19 +749,31 @@ class ShowView():
             # 创建并更新颜色比例尺
             self.update_colorbar(h)
             self.update_width_colorbar(h)
+            self.update_angle_colorbar(h)  # 新增
 
     def apply_colormap(self, data):
         """应用热力图颜色映射"""
-        # 确保数据在0-1范围内
-        data = np.clip(data, 0, 1)
-
-        # 转换为uint8类型
-        data_uint8 = (data * 255).astype(np.uint8)
-
         # 创建彩色图像
         colored = np.zeros((data.shape[0], data.shape[1], 3), dtype=np.uint8)
 
-        # 应用颜色映射（这里使用简单的红色到蓝色渐变）
+        # 根据不同类型的数据使用不同的归一化方法
+        if data is self.quality_map:
+            # quality_map 已经是 0-1 范围，直接使用
+            normalized_data = np.clip(data, 0, 1)
+        elif data is self.angle_map:
+            # angle_map 范围是 -90 到 90，归一化到 0-1
+            normalized_data = (data + 90) / 180
+        elif data is self.width_map:
+            # width_map 范围是 0 到 150，归一化到 0-1
+            normalized_data = data / 150
+        else:
+            # 默认情况，假设数据已经归一化
+            normalized_data = np.clip(data, 0, 1)
+
+        # 转换为uint8类型
+        data_uint8 = (normalized_data * 255).astype(np.uint8)
+
+        # 应用颜色映射（红色到蓝色渐变）
         colored[..., 0] = data_uint8  # 红色通道
         colored[..., 2] = 255 - data_uint8  # 蓝色通道
 
@@ -754,7 +803,7 @@ class ShowView():
         return QCursor(pixmap)
 
     def update_colorbar(self, height):
-        """更新颜色比例尺"""
+        """更新quality热力图的颜色比例��"""
         # 创建一个垂直的颜色渐变条
         colorbar = np.zeros((height, 20, 3), dtype=np.uint8)
         for i in range(height):
@@ -773,13 +822,14 @@ class ShowView():
         painter.setPen(Qt.black)
         painter.setFont(QFont('Arial', 8))
 
-        # 在顶部绘制"1.0"
+        # 在顶部绘制最大值
         painter.drawText(0, 10, "1.0")
-        # 在底部绘制"0.0"
+        # 在中间绘制中间值
+        painter.drawText(0, height//2, "0.5")
+        # 在底部绘制最小值
         painter.drawText(0, height-2, "0.0")
 
         painter.end()
-
         self.colorbar_label.setPixmap(colorbar_pixmap)
 
     def update_width_colorbar(self, height):
@@ -802,14 +852,45 @@ class ShowView():
         painter.setPen(Qt.black)
         painter.setFont(QFont('Arial', 8))
 
-        # 在顶部绘制"2.0"
-        painter.drawText(0, 10, "2.0")
-        # 在底部绘制"0.0"
-        painter.drawText(0, height-2, "0.0")
+        # 在顶部绘制最大值
+        painter.drawText(0, 10, "150")
+        # 在中间绘制中间值
+        painter.drawText(0, height//2, "75")
+        # 在底部绘制最小值
+        painter.drawText(0, height-2, "0")
 
         painter.end()
-
         self.width_colorbar_label.setPixmap(colorbar_pixmap)
+
+    def update_angle_colorbar(self, height):
+        """更新angle热力图的颜色比例尺"""
+        # 创建一个垂直的颜色渐变条
+        colorbar = np.zeros((height, 20, 3), dtype=np.uint8)
+        for i in range(height):
+            value = 1.0 - (i / height)  # 从上到下，值从1降到0
+            colorbar[i, :, 0] = int(value * 255)  # 红色通道
+            colorbar[i, :, 2] = int((1 - value) * 255)  # 蓝色通道
+
+        # 添加最大值和最小值标签
+        font = QPainter()
+        colorbar_pixmap = QPixmap(20, height)
+        colorbar_qimage = QImage(
+            colorbar.data, 20, height, 60, QImage.Format_RGB888)
+        colorbar_pixmap.convertFromImage(colorbar_qimage)
+
+        painter = QPainter(colorbar_pixmap)
+        painter.setPen(Qt.black)
+        painter.setFont(QFont('Arial', 8))
+
+        # 在顶部绘制最大值
+        painter.drawText(0, 10, "90°")
+        # 在中间绘制中间值
+        painter.drawText(0, height//2, "0°")
+        # 在底部绘制最小值
+        painter.drawText(0, height-2, "-90°")
+
+        painter.end()
+        self.angle_colorbar_label.setPixmap(colorbar_pixmap)
 
     def point_in_quadrilateral(self, point, quad_points):
         """
