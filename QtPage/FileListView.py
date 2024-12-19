@@ -21,7 +21,7 @@ class FileListView():
         # 设置固定宽度
         self.widget = QWidget()
         self.widget.setFixedWidth(200)  # 设置固定宽度为200像素
-        
+
         self.layout = QVBoxLayout()
         self.widget.setLayout(self.layout)
 
@@ -29,10 +29,10 @@ class FileListView():
         self.file_list_groupbox.setAlignment(Qt.AlignCenter)
 
         # 设置列表控件的固定宽度
-        self.list_widget.setFixedWidth(180)  # 设置列表控件的宽度略小于容器宽度
+        self.list_widget.setFixedWidth(150)  # 设置列表控件的宽度略小于容器宽度
 
         # 设置按钮的固定宽度
-        self.clear_button.setFixedWidth(180)
+        self.clear_button.setFixedWidth(160)
         self.select_folder_button.setFixedWidth(180)
 
         self.file_layout = QVBoxLayout()
