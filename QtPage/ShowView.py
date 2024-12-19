@@ -49,7 +49,7 @@ class ShowView():
         self.image_rect = None  # 存储实际显示的图片区域
 
         self.origin_image = ClickableLabel(
-            "Please add images and select an image :)")
+            "请添加并选择一张图片 :)")
         self.origin_image.parent_view = self
 
         font = QFont()
@@ -69,11 +69,11 @@ class ShowView():
         self.width_image.setAlignment(Qt.AlignCenter)
 
         # 添加标签
-        self.quality_label = QLabel("Quality")
+        self.quality_label = QLabel("")  # 初始化时不显示文字
         self.quality_label.setAlignment(Qt.AlignCenter)
-        self.angle_label = QLabel("Angle")
+        self.angle_label = QLabel("")    # 初始化时不显示文字
         self.angle_label.setAlignment(Qt.AlignCenter)
-        self.width_label = QLabel("Width")
+        self.width_label = QLabel("")    # 初始化时不显示文字
         self.width_label.setAlignment(Qt.AlignCenter)
 
         # 创建颜色比例尺标签
@@ -95,14 +95,14 @@ class ShowView():
         self.widget.setLayout(self.layout)
 
         # Origin Image
-        self.origin_groupbox = QGroupBox("Origin Image")
+        self.origin_groupbox = QGroupBox("原始图像")
         self.origin_groupbox.setAlignment(Qt.AlignCenter)
         self.origin_layout = QHBoxLayout()
         self.origin_layout.addWidget(self.origin_image)
         self.origin_groupbox.setLayout(self.origin_layout)
 
         # Preview
-        self.preview_groupbox = QGroupBox("Preview Image")
+        self.preview_groupbox = QGroupBox("预览图像")
         self.preview_groupbox.setAlignment(Qt.AlignCenter)
         self.preview_layout = QVBoxLayout()  # 垂直布局
 
@@ -178,6 +178,8 @@ class ShowView():
         # 修改鼠标跟踪
         self.origin_image.setMouseTracking(True)
         self.origin_image.setCursor(Qt.ArrowCursor)
+
+        self.current_file_path = None  # 添加这一行
 
     def map_to_image_coordinates(self, pos):
         """将窗口坐标映射到图片坐标"""
@@ -259,35 +261,8 @@ class ShowView():
 
     def mousePressEvent(self, event):
         if self.fine_tune_mode in ['up', 'down'] and event.button() == Qt.LeftButton:
-            # 获取点击位置
-            pos = event.mapped_pos
-            # 转换为预览图坐标
-            preview_x = int(pos.x() / 2)
-            preview_y = int(pos.y() / 2)
-
-            # 更新quality map
-            if self.quality_map is not None:
-                height, width = self.quality_map.shape
-                radius = self.fine_tune_radius // 2  # 预览图上的半径（现在是5像素）
-
-                # 在圆形区域内更值
-                for y in range(max(0, preview_y - radius), min(height, preview_y + radius)):
-                    for x in range(max(0, preview_x - radius), min(width, preview_x + radius)):
-                        # 计算到中心的距离
-                        dist = math.sqrt((x - preview_x) **
-                                         2 + (y - preview_y)**2)
-                        if dist <= radius:
-                            # 使用高斯衰减
-                            factor = math.exp(-(dist**2)/(2*(radius/2)**2))
-                            if self.fine_tune_mode == 'up':
-                                self.quality_map[y, x] = min(
-                                    1.0, self.quality_map[y, x] + self.fine_tune_strength * factor)
-                            else:  # down
-                                self.quality_map[y, x] = max(
-                                    0.0, self.quality_map[y, x] - self.fine_tune_strength * factor)
-
-                # 更新预览图显示
-                self.update_preview_images()
+            # 调用 update_quality_value 方法来更新值
+            self.update_quality_value(event.mapped_pos)
         elif self.is_drawing and event.button() == Qt.LeftButton:
             # 处理绘制模式下的点击
             self.start_point = event.mapped_pos
@@ -354,7 +329,10 @@ class ShowView():
                         self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
 
     def mouseMoveEvent(self, event):
-        if self.is_drawing and self.start_point:
+        if self.fine_tune_mode in ['up', 'down'] and event.buttons() & Qt.LeftButton:
+            # 当鼠标按下并移动时，也更新值
+            self.update_quality_value(event.mapped_pos)
+        elif self.is_drawing and self.start_point:
             if self.temp_pixmap:
                 drawing_pixmap = self.temp_pixmap.copy()
                 painter = QPainter(drawing_pixmap)
@@ -388,7 +366,7 @@ class ShowView():
                 )
                 grasp_line['angle'] = math.atan2(dy, dx)
 
-                # 添加到列表中
+                # 添加到��表中
                 self.grasp_lines.append(grasp_line)
 
                 # 设置为当前选中的线
@@ -431,7 +409,7 @@ class ShowView():
                 self.origin_image.setPixmap(
                     self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
 
-                # 保存当前图片状
+                # 保存当前图状
                 self.temp_pixmap = self.current_pixmap.copy()
 
                 print(f"Added new grasp line from {
@@ -445,7 +423,7 @@ class ShowView():
                 self.on_drawing_finished()
 
     def draw_perpendicular_line(self, length_ratio=0.25):
-        """在当前选中���取线中心绘制垂直线"""
+        """在当前选中取线中心绘制垂直线"""
         if not self.current_grasp_line:
             return False
 
@@ -588,7 +566,7 @@ class ShowView():
         image = np.full((height, width), 200, dtype=np.uint8)  # 使用浅灰色
         qimage = QImage(image.data,
                         width, height,
-                        width,  # 添加步长参数
+                        width,  # ���加步长参数
                         QImage.Format_Grayscale8)
         return image, qimage
 
@@ -600,15 +578,18 @@ class ShowView():
         # 获取原图尺寸
         original_height = self.current_pixmap.height()
         original_width = self.current_pixmap.width()
-        
+
         # 获取预览图尺寸
         preview_height = original_height // 2
         preview_width = original_width // 2
 
         # 创建热力图（使用预览图尺寸）
-        self.quality_map = np.zeros((preview_height, preview_width), dtype=np.float32)
-        self.angle_map = np.zeros((preview_height, preview_width), dtype=np.float32)
-        self.width_map = np.zeros((preview_width, preview_width), dtype=np.float32)
+        self.quality_map = np.zeros(
+            (preview_height, preview_width), dtype=np.float32)
+        self.angle_map = np.zeros(
+            (preview_height, preview_width), dtype=np.float32)
+        self.width_map = np.zeros(
+            (preview_height, preview_width), dtype=np.float32)
 
         # 用于跟踪最大值
         max_angle = float('-inf')
@@ -621,14 +602,16 @@ class ShowView():
 
             # 遍历所有抓取线
             for grasp_line in self.grasp_lines:
-                if not grasp_line['perp_line']:  # 跳过没有标注宽度的线
+                if not grasp_line['perp_line']:  # 跳过没有标��宽度的线
                     continue
 
                 # 计算在中心轴上均匀分布的点
                 num_points = int(grasp_line['length'])  # 每个像素一个点
 
-                dx = (grasp_line['end'][0] - grasp_line['start'][0]) / (num_points - 1)
-                dy = (grasp_line['end'][1] - grasp_line['start'][1]) / (num_points - 1)
+                dx = (grasp_line['end'][0] -
+                      grasp_line['start'][0]) / (num_points - 1)
+                dy = (grasp_line['end'][1] -
+                      grasp_line['start'][1]) / (num_points - 1)
 
                 # 计算中心轴与x轴正方向的夹角
                 dx_axis = grasp_line['end'][0] - grasp_line['start'][0]
@@ -655,7 +638,8 @@ class ShowView():
                     center_y = grasp_line['start'][1] + dy * i
 
                     # 计算垂直线的端点（原图坐标）
-                    perp_length = grasp_line['length'] * grasp_line['perp_line']['length_ratio']
+                    perp_length = grasp_line['length'] * \
+                        grasp_line['perp_line']['length_ratio']
                     half_length = perp_length / 2
                     perp_angle = grasp_line['angle'] + math.pi/2
 
@@ -695,25 +679,34 @@ class ShowView():
 
                         # 计算中心线的点（缩放到预览图尺寸）
                         center_line_start = np.array([
-                            int((prev_start_x + prev_end_x) / 2 * preview_width / original_width),
-                            int((prev_start_y + prev_end_y) / 2 * preview_height / original_height)
+                            int((prev_start_x + prev_end_x) / 2 *
+                                preview_width / original_width),
+                            int((prev_start_y + prev_end_y) / 2 *
+                                preview_height / original_height)
                         ])
                         center_line_end = np.array([
-                            int((start_x + end_x) / 2 * preview_width / original_width),
-                            int((start_y + end_y) / 2 * preview_height / original_height)
+                            int((start_x + end_x) / 2 *
+                                preview_width / original_width),
+                            int((start_y + end_y) / 2 *
+                                preview_height / original_height)
                         ])
 
                         # 为多边形区域内的每个点计算高斯值
                         for y, x in zip(rr, cc):
                             point = np.array([x, y])
                             # 计算点到中心线的距离
-                            dist = self.point_to_line_distance(point, center_line_start, center_line_end)
+                            dist = self.point_to_line_distance(
+                                point, center_line_start, center_line_end)
                             # 计算高斯值（sigma可以调整来改变分布的宽度）
-                            sigma = perp_length / (4 * original_height / preview_height)  # 调整sigma以适应预览图尺寸
-                            gaussian_value = np.exp(-0.5 * (dist ** 2) / (sigma ** 2))
-                            
+                            sigma = perp_length / \
+                                (4 * original_height /
+                                 preview_height)  # 调整sigma以适应预览图尺寸
+                            gaussian_value = np.exp(-0.5 *
+                                                    (dist ** 2) / (sigma ** 2))
+
                             # 更新quality map（使用高斯值）
-                            self.quality_map[y, x] = max(self.quality_map[y, x], gaussian_value)
+                            self.quality_map[y, x] = max(
+                                self.quality_map[y, x], gaussian_value)
                             # 更新其他map（保持不变）
                             self.width_map[y, x] = perp_length
                             self.angle_map[y, x] = angle_deg
@@ -722,8 +715,8 @@ class ShowView():
                     prev_start_x, prev_start_y = start_x, start_y
                     prev_end_x, prev_end_y = end_x, end_y
 
-            print(f"最大角度值: {max_angle:.2f}°")
-            print(f"最大宽度值: {max_width:.2f}")
+            print(f"最大角度值: {angle_deg:.2f}°")
+            print(f"最大宽度值: {perp_length:.2f}")
 
             painter.end()
             self.origin_image.setPixmap(
@@ -928,13 +921,13 @@ class ShowView():
         """计算点到线段的距离"""
         if np.array_equal(line_start, line_end):
             return np.linalg.norm(point - line_start)
-        
+
         line_vec = line_end - line_start
         point_vec = point - line_start
         line_length = np.linalg.norm(line_vec)
         line_unit_vec = line_vec / line_length
         projection_length = np.dot(point_vec, line_unit_vec)
-        
+
         if projection_length < 0:
             return np.linalg.norm(point - line_start)
         elif projection_length > line_length:
@@ -942,3 +935,32 @@ class ShowView():
         else:
             projection = line_start + line_unit_vec * projection_length
             return np.linalg.norm(point - projection)
+
+    def update_quality_value(self, pos):
+        """更新quality map的值"""
+        # 转换为预览图坐标
+        preview_x = int(pos.x() / 2)
+        preview_y = int(pos.y() / 2)
+
+        # 更新quality map
+        if self.quality_map is not None:
+            height, width = self.quality_map.shape
+            radius = self.fine_tune_radius // 2  # 预览图上的半径
+
+            # 在圆形区域内更新值
+            for y in range(max(0, preview_y - radius), min(height, preview_y + radius)):
+                for x in range(max(0, preview_x - radius), min(width, preview_x + radius)):
+                    # 计算到中心的距离
+                    dist = math.sqrt((x - preview_x) ** 2 + (y - preview_y)**2)
+                    if dist <= radius:
+                        # 使用高斯衰减
+                        factor = math.exp(-(dist**2)/(2*(radius/2)**2))
+                        if self.fine_tune_mode == 'up':
+                            self.quality_map[y, x] = min(
+                                1.0, self.quality_map[y, x] + self.fine_tune_strength * factor)
+                        else:  # down
+                            self.quality_map[y, x] = max(
+                                0.0, self.quality_map[y, x] - self.fine_tune_strength * factor)
+
+            # 更新预览图显示
+            self.update_preview_images()
