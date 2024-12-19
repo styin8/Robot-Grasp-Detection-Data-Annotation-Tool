@@ -279,15 +279,16 @@ class ActionView():
         original_width = self.show_view.current_pixmap.width()
 
         # 创建label文件夹
-        folder_path = os.path.dirname(self.show_view.current_file_path)
-        label_folder = os.path.join(folder_path, 'label')
+        folder_path = os.path.dirname(
+            os.path.dirname(self.show_view.current_file_path))
+        label_folder = os.path.join(folder_path, 'labels')
         if not os.path.exists(label_folder):
             os.makedirs(label_folder)
 
         # 获取原始文件名（不包含扩展名）
         base_name = os.path.splitext(os.path.basename(
             self.show_view.current_file_path))[0]
-        save_path = os.path.join(label_folder, f"{base_name}.dat")
+        save_path = os.path.join(label_folder, f"{base_name}.mat")
 
         try:
             # 将预览图尺寸的热力图放大到原图尺寸
