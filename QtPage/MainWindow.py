@@ -12,13 +12,13 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # Window Settings
-        self.setWindowTitle("Data Collection Tool for Grasp Detection")
+        self.setWindowTitle("抓取点标注工具")
 
         # Set Menu
         menubar = self.menuBar()
-        file_menu = menubar.addMenu("File")
-        select_file_action = file_menu.addAction("Select Flie")
-        select_folder_action = file_menu.addAction("Select Folder")
+        file_menu = menubar.addMenu("文件")
+        select_file_action = file_menu.addAction("选择图片文件")
+        select_folder_action = file_menu.addAction("选择文件夹")
 
         select_file_action.triggered.connect(self.selectFiles)
         select_folder_action.triggered.connect(self.selectFolder)
@@ -30,9 +30,9 @@ class MainWindow(QMainWindow):
         self.FileListViewIns = FileListView(self.ShowViewIns)
 
         main_layout = QHBoxLayout()
-        main_layout.addWidget(self.FileListViewIns.widget,1)
-        main_layout.addWidget(self.ShowViewIns.widget,4)
-        main_layout.addWidget(self.ActionViewIns.widget,1)
+        main_layout.addWidget(self.FileListViewIns.widget, 1)
+        main_layout.addWidget(self.ShowViewIns.widget, 4)
+        main_layout.addWidget(self.ActionViewIns.widget, 1)
 
         central_widget = QWidget()
         central_widget.setLayout(main_layout)
@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
             for file_path in file_paths:
                 file_name = os.path.basename(file_path)
                 self.FileListViewIns.list_widget.addItem(file_name)
-                
+
             # 显示第一张图片
             self.FileListViewIns.showFirstImage()
 
@@ -77,8 +77,8 @@ class MainWindow(QMainWindow):
                 if file_info.isFile() and self.isImageFile(file_info):
                     self.FileListViewIns.list_widget.addItem(file_name)
                     self.FileListViewIns.file_path.append(file_path)
-                    
-            # 显示第一张图片
+
+            # 显示第一张��片
             self.FileListViewIns.showFirstImage()
 
     def isImageFile(self, file_info):
