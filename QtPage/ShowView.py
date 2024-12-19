@@ -159,7 +159,7 @@ class ShowView():
         # 添加一个回调函数属性
         self.on_drawing_finished = None
 
-        # 添加新的存���抓取线的信息
+        # 添加新的存储抓取线的信息
         self.grasp_lines = []  # 存储所有的抓取线信息
         self.current_grasp_line = None  # 当前选中的抓取线
 
@@ -445,7 +445,7 @@ class ShowView():
                 self.on_drawing_finished()
 
     def draw_perpendicular_line(self, length_ratio=0.25):
-        """在当前选中抓取线中心绘制垂直线"""
+        """在当前选中���取线中心绘制垂直线"""
         if not self.current_grasp_line:
             return False
 
@@ -600,18 +600,15 @@ class ShowView():
         # 获取原图尺寸
         original_height = self.current_pixmap.height()
         original_width = self.current_pixmap.width()
-
+        
         # 获取预览图尺寸
         preview_height = original_height // 2
         preview_width = original_width // 2
 
         # 创建热力图（使用预览图尺寸）
-        self.quality_map = np.zeros(
-            (preview_height, preview_width), dtype=np.float32)
-        self.angle_map = np.zeros(
-            (preview_height, preview_width), dtype=np.float32)
-        self.width_map = np.zeros(
-            (preview_width, preview_width), dtype=np.float32)
+        self.quality_map = np.zeros((preview_height, preview_width), dtype=np.float32)
+        self.angle_map = np.zeros((preview_height, preview_width), dtype=np.float32)
+        self.width_map = np.zeros((preview_width, preview_width), dtype=np.float32)
 
         # 用于跟踪最大值
         max_angle = float('-inf')
@@ -630,16 +627,14 @@ class ShowView():
                 # 计算在中心轴上均匀分布的点
                 num_points = int(grasp_line['length'])  # 每个像素一个点
 
-                dx = (grasp_line['end'][0] -
-                      grasp_line['start'][0]) / (num_points - 1)
-                dy = (grasp_line['end'][1] -
-                      grasp_line['start'][1]) / (num_points - 1)
+                dx = (grasp_line['end'][0] - grasp_line['start'][0]) / (num_points - 1)
+                dy = (grasp_line['end'][1] - grasp_line['start'][1]) / (num_points - 1)
 
                 # 计算中心轴与x轴正方向的夹角
-                dx_axis = grasp_line['end'][0] - grasp_line['start'][0]  # x轴方向的差值
-                dy_axis = -(grasp_line['end'][1] - grasp_line['start'][1])  # y轴方向的差值，注意加负号因为图像坐标系y轴向下
-                angle_rad = math.atan2(dy_axis, dx_axis)  # 计算与x轴正方向的夹角
-                angle_deg = math.degrees(angle_rad)  # 转换为角度
+                dx_axis = grasp_line['end'][0] - grasp_line['start'][0]
+                dy_axis = -(grasp_line['end'][1] - grasp_line['start'][1])
+                angle_rad = math.atan2(dy_axis, dx_axis)
+                angle_deg = math.degrees(angle_rad)
 
                 # 确保角度在-90到90度之间
                 if angle_deg > 90:
@@ -660,8 +655,7 @@ class ShowView():
                     center_y = grasp_line['start'][1] + dy * i
 
                     # 计算垂直线的端点（原图坐标）
-                    perp_length = grasp_line['length'] * \
-                        grasp_line['perp_line']['length_ratio']
+                    perp_length = grasp_line['length'] * grasp_line['perp_line']['length_ratio']
                     half_length = perp_length / 2
                     perp_angle = grasp_line['angle'] + math.pi/2
 
@@ -695,22 +689,41 @@ class ShowView():
                             int(start_x * preview_width / original_width)
                         ])
 
-                        # ���用polygon函数获取多边形内的所有点
+                        # 使用polygon函数获取多边形内的所有点
                         rr, cc = polygon(
                             poly_y, poly_x, shape=(preview_height, preview_width))
 
-                        # 一次性更新所有点的值
-                        self.quality_map[rr, cc] = 1.0  # quality保持归一化
-                        self.width_map[rr, cc] = perp_length  # width使用实际长度
-                        # angle使用实际角度（与x轴正方向的夹角）
-                        self.angle_map[rr, cc] = angle_deg
+                        # 计算中心线的点（缩放到预览图尺寸）
+                        center_line_start = np.array([
+                            int((prev_start_x + prev_end_x) / 2 * preview_width / original_width),
+                            int((prev_start_y + prev_end_y) / 2 * preview_height / original_height)
+                        ])
+                        center_line_end = np.array([
+                            int((start_x + end_x) / 2 * preview_width / original_width),
+                            int((start_y + end_y) / 2 * preview_height / original_height)
+                        ])
+
+                        # 为多边形区域内的每个点计算高斯值
+                        for y, x in zip(rr, cc):
+                            point = np.array([x, y])
+                            # 计算点到中心线的距离
+                            dist = self.point_to_line_distance(point, center_line_start, center_line_end)
+                            # 计算高斯值（sigma可以调整来改变分布的宽度）
+                            sigma = perp_length / (4 * original_height / preview_height)  # 调整sigma以适应预览图尺寸
+                            gaussian_value = np.exp(-0.5 * (dist ** 2) / (sigma ** 2))
+                            
+                            # 更新quality map（使用高斯值）
+                            self.quality_map[y, x] = max(self.quality_map[y, x], gaussian_value)
+                            # 更新其他map（保持不变）
+                            self.width_map[y, x] = perp_length
+                            self.angle_map[y, x] = angle_deg
 
                     # 更新前一个点的坐标
                     prev_start_x, prev_start_y = start_x, start_y
                     prev_end_x, prev_end_y = end_x, end_y
 
-            print(f"最大角度值: {angle_deg:.2f}°")
-            print(f"最大宽度值: {perp_length:.2f}")
+            print(f"最大角度值: {max_angle:.2f}°")
+            print(f"最大宽度值: {max_width:.2f}")
 
             painter.end()
             self.origin_image.setPixmap(
@@ -726,7 +739,7 @@ class ShowView():
                 self.angle_map is not None,
                 self.width_map is not None]):
 
-            # 转换为uint8类型并应用颜��映射
+            # 转换为uint8类型并应用颜色映射
             quality_colored = self.apply_colormap(self.quality_map)
             angle_colored = self.apply_colormap(self.angle_map)
             width_colored = self.apply_colormap(self.width_map)
@@ -803,7 +816,7 @@ class ShowView():
         return QCursor(pixmap)
 
     def update_colorbar(self, height):
-        """更新quality热力图的颜色比例��"""
+        """更新quality热力图的颜色比例"""
         # 创建一个垂直的颜色渐变条
         colorbar = np.zeros((height, 20, 3), dtype=np.uint8)
         for i in range(height):
@@ -910,3 +923,22 @@ class ShowView():
         has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0) or (d4 > 0)
 
         return not (has_neg and has_pos)
+
+    def point_to_line_distance(self, point, line_start, line_end):
+        """计算点到线段的距离"""
+        if np.array_equal(line_start, line_end):
+            return np.linalg.norm(point - line_start)
+        
+        line_vec = line_end - line_start
+        point_vec = point - line_start
+        line_length = np.linalg.norm(line_vec)
+        line_unit_vec = line_vec / line_length
+        projection_length = np.dot(point_vec, line_unit_vec)
+        
+        if projection_length < 0:
+            return np.linalg.norm(point - line_start)
+        elif projection_length > line_length:
+            return np.linalg.norm(point - line_end)
+        else:
+            projection = line_start + line_unit_vec * projection_length
+            return np.linalg.norm(point - projection)
