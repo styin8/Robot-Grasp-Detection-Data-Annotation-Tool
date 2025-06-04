@@ -52,7 +52,7 @@ class ActionView():
         self.mark_slider.valueChanged.connect(
             lambda: self.check_image_loaded(self.handle_slider_change))
 
-        self.generate_button = QPushButton("生成热力图")
+        self.generate_button = QPushButton("生成效果图")
         self.generate_button.setFixedWidth(200)
         self.generate_button.clicked.connect(
             lambda: self.check_image_loaded(self.handle_generate))
@@ -69,12 +69,12 @@ class ActionView():
         fine_text.setAlignment(Qt.AlignCenter)
 
         # 加Up和Down按钮
-        self.fine_up_button = QPushButton("增加质量值")
+        self.fine_up_button = QPushButton("提升抓取质量")
         self.fine_up_button.setFixedWidth(95)
         self.fine_up_button.clicked.connect(
             lambda: self.check_image_loaded(self.handle_fine_up))
 
-        self.fine_down_button = QPushButton("减少质量值")
+        self.fine_down_button = QPushButton("降低抓取质量")
         self.fine_down_button.setFixedWidth(95)
         self.fine_down_button.clicked.connect(
             lambda: self.check_image_loaded(self.handle_fine_down))

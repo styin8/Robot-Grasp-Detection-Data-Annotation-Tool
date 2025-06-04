@@ -412,8 +412,8 @@ class ShowView():
                 # 保存当前图状
                 self.temp_pixmap = self.current_pixmap.copy()
 
-                print(f"Added new grasp line from {
-                      grasp_line['start']} to {grasp_line['end']}")
+                print(
+                    f"Added new grasp line from {grasp_line['start']} to {grasp_line['end']}")
 
             self.start_point = None
             self.end_point = None

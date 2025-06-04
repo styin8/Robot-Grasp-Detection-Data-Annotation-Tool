@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # Window Settings
-        self.setWindowTitle("抓取点标注工具")
+        self.setWindowTitle("机器人抓取检测的数据标注软件")
 
         # Set Menu
         menubar = self.menuBar()

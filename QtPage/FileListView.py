@@ -15,7 +15,7 @@ class FileListView():
 
         # Component
         self.list_widget = QListWidget()
-        self.clear_button = QPushButton("Clear List")
+        self.clear_button = QPushButton("清空列表")
         self.select_folder_button = QPushButton("选择文件夹")
 
         # 设置固定宽度
