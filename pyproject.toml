@@ -1,10 +1,11 @@
 [project]
-name = "Robot Grasp Detection Data Annotation Tool"
+name = "Robot-Grasp-Detection-Data-Annotation-Tool"
 version = "0.1.0"
-description = "..."
+description = "A tool for annotating robot grasp detection data"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "matplotlib>=3.10.3",
     "opencv-python>=4.11.0.86",
     "pyqt5>=5.15.11",
     "scikit-image>=0.25.2",
