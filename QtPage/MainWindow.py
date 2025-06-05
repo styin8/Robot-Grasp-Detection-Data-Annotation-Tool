@@ -12,13 +12,13 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # Window Settings
-        self.setWindowTitle("机器人抓取检测的数据标注软件")
+        self.setWindowTitle("Robot Grasp Detection Data Annotation Software")
 
         # Set Menu
         menubar = self.menuBar()
-        file_menu = menubar.addMenu("文件")
-        select_file_action = file_menu.addAction("选择图片文件")
-        select_folder_action = file_menu.addAction("选择文件夹")
+        file_menu = menubar.addMenu("File")
+        select_file_action = file_menu.addAction("Select Image Files")
+        select_folder_action = file_menu.addAction("Select Folder")
 
         select_file_action.triggered.connect(self.selectFiles)
         select_folder_action.triggered.connect(self.selectFolder)
@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
                     self.FileListViewIns.list_widget.addItem(file_name)
                     self.FileListViewIns.file_path.append(file_path)
 
-            # 显示第一张��片
+            # 显示第一张图片
             self.FileListViewIns.showFirstImage()
 
     def isImageFile(self, file_info):

@@ -49,7 +49,7 @@ class ShowView():
         self.image_rect = None  # 存储实际显示的图片区域
 
         self.origin_image = ClickableLabel(
-            "请添加并选择一张图片 :)")
+            "Please add and select an image :)")
         self.origin_image.parent_view = self
 
         font = QFont()
@@ -95,38 +95,38 @@ class ShowView():
         self.widget.setLayout(self.layout)
 
         # Origin Image
-        self.origin_groupbox = QGroupBox("原始图像")
+        self.origin_groupbox = QGroupBox("Original Image")
         self.origin_groupbox.setAlignment(Qt.AlignCenter)
         self.origin_layout = QHBoxLayout()
         self.origin_layout.addWidget(self.origin_image)
         self.origin_groupbox.setLayout(self.origin_layout)
 
         # Preview
-        self.preview_groupbox = QGroupBox("预览图像")
+        self.preview_groupbox = QGroupBox("Preview Images")
         self.preview_groupbox.setAlignment(Qt.AlignCenter)
-        self.preview_layout = QVBoxLayout()  # 垂直布局
+        self.preview_layout = QVBoxLayout()  # Vertical layout
 
-        # 创建水平布局来放预览图
+        # Create horizontal layout for preview images
         self.preview_images_layout = QHBoxLayout()
         self.preview_images_layout.setAlignment(Qt.AlignCenter)
 
-        # 为每个预览图建垂直布局
-        quality_container = QVBoxLayout()    # 垂直布局放图片和标签
-        quality_preview = QHBoxLayout()      # 水平布局放比例尺和图片
-        quality_preview.addWidget(self.colorbar_label)  # 先添加比例尺
-        quality_preview.addWidget(self.quality_image)   # 再添加图片
+        # Create vertical layout for each preview image
+        quality_container = QVBoxLayout()    # Vertical layout for image and label
+        quality_preview = QHBoxLayout()      # Horizontal layout for scale and image
+        quality_preview.addWidget(self.colorbar_label)  # Add scale first
+        quality_preview.addWidget(self.quality_image)   # Then add image
         quality_preview.setAlignment(
-            self.colorbar_label, Qt.AlignVCenter)  # 垂直居中对齐
-        quality_container.addLayout(quality_preview)    # 添加水平布局
-        quality_container.addWidget(self.quality_label)  # 添加标签
+            self.colorbar_label, Qt.AlignVCenter)  # Vertical center alignment
+        quality_container.addLayout(quality_preview)    # Add horizontal layout
+        quality_container.addWidget(self.quality_label)  # Add label
 
         angle_container = QVBoxLayout()
-        angle_preview = QHBoxLayout()  # 新增
-        angle_preview.addWidget(self.angle_colorbar_label)  # 新增
-        angle_preview.addWidget(self.angle_image)  # 新增
+        angle_preview = QHBoxLayout()
+        angle_preview.addWidget(self.angle_colorbar_label)
+        angle_preview.addWidget(self.angle_image)
         angle_preview.setAlignment(
-            self.angle_colorbar_label, Qt.AlignVCenter)  # 新增
-        angle_container.addLayout(angle_preview)  # 修改
+            self.angle_colorbar_label, Qt.AlignVCenter)
+        angle_container.addLayout(angle_preview)
         angle_container.addWidget(self.angle_label)
 
         width_container = QVBoxLayout()
@@ -137,7 +137,7 @@ class ShowView():
         width_container.addLayout(width_preview)
         width_container.addWidget(self.width_label)
 
-        # 各个容器添加到预览图布局中
+        # Add each container to preview images layout
         preview_widget1 = QWidget()
         preview_widget1.setLayout(quality_container)
         preview_widget2 = QWidget()
@@ -149,7 +149,7 @@ class ShowView():
         self.preview_images_layout.addWidget(preview_widget2)
         self.preview_images_layout.addWidget(preview_widget3)
 
-        # 将预览图布局添加到预览组布局中
+        # Add preview images layout to preview group layout
         self.preview_layout.addLayout(self.preview_images_layout)
         self.preview_groupbox.setLayout(self.preview_layout)
 
@@ -366,7 +366,7 @@ class ShowView():
                 )
                 grasp_line['angle'] = math.atan2(dy, dx)
 
-                # 添加到��表中
+                # 添加到表中
                 self.grasp_lines.append(grasp_line)
 
                 # 设置为当前选中的线
@@ -566,7 +566,7 @@ class ShowView():
         image = np.full((height, width), 200, dtype=np.uint8)  # 使用浅灰色
         qimage = QImage(image.data,
                         width, height,
-                        width,  # ���加步长参数
+                        width,  # 加步长参数
                         QImage.Format_Grayscale8)
         return image, qimage
 
@@ -602,7 +602,7 @@ class ShowView():
 
             # 遍历所有抓取线
             for grasp_line in self.grasp_lines:
-                if not grasp_line['perp_line']:  # 跳过没有标��宽度的线
+                if not grasp_line['perp_line']:  # 跳过没有标注宽度的线
                     continue
 
                 # 计算在中心轴上均匀分布的点
