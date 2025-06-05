@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
                 file_name = os.path.basename(file_path)
                 self.FileListViewIns.list_widget.addItem(file_name)
 
-            # 显示第一张图片
+            # Display the first image
             self.FileListViewIns.showFirstImage()
 
     def selectFolder(self):
@@ -78,14 +78,14 @@ class MainWindow(QMainWindow):
                     self.FileListViewIns.list_widget.addItem(file_name)
                     self.FileListViewIns.file_path.append(file_path)
 
-            # 显示第一张图片
+            # Display the first image
             self.FileListViewIns.showFirstImage()
 
     def isImageFile(self, file_info):
-        # 获取文件的扩展名
+        # Get file extension
         file_extension = file_info.suffix().lower()
 
-        # 使用 QImageReader 来判断扩展名是否为图片格式
+        # Use QImageReader to check if the extension is an image format
         image_reader = QImageReader()
         image_reader.setFileName(file_info.filePath())
         return image_reader.canRead() and file_extension in ["jpg", "jpeg", "png", "gif", "bmp"]

@@ -9,9 +9,9 @@ import numpy as np
 
 class ActionView():
     def __init__(self, show_view_instance) -> None:
-        # 保存ShowView实例的引用
+        # Save reference to ShowView instance
         self.show_view = show_view_instance
-        # 设置回调函数
+        # Set callback function
         self.show_view.on_drawing_finished = self.on_drawing_finished
 
         # Layout
@@ -161,7 +161,7 @@ class ActionView():
         self.save_button.setStyleSheet(self.normal_style)
 
     def check_image_loaded(self, callback_function):
-        """检查是否已加载图片的通用方法"""
+        """Check if an image has been loaded - general method"""
         if not self.show_view.current_pixmap:
             QMessageBox.warning(self.widget,
                                 "Warning",
@@ -171,7 +171,7 @@ class ActionView():
         callback_function()
 
     def on_drawing_finished(self):
-        """当绘制完成时更新按钮状态"""
+        """Update button state when drawing is complete"""
         self.select_button.setText("Select")
 
     def toggle_drawing_mode(self):
@@ -182,7 +182,7 @@ class ActionView():
             self.select_button.setText("Select")
 
     def handle_slider_change(self):
-        """处理滑块值变化的逻辑"""
+        """Handle slider value change logic"""
         if not self.show_view.current_grasp_line:
             return
 
@@ -193,7 +193,7 @@ class ActionView():
         self.show_view.update_perpendicular_line(ratio)
 
     def handle_mark(self):
-        """处理Mark按钮点击的逻辑"""
+        """Handle Mark button click logic"""
         # Check if a select line has already been drawn
         if not self.show_view.current_grasp_line:
             QMessageBox.warning(self.widget,
@@ -214,7 +214,7 @@ class ActionView():
                                 QMessageBox.Ok)
 
     def handle_generate(self):
-        """处理Generate按钮点击的逻辑"""
+        """Handle Generate button click logic"""
         # Check if there are labeled grasp lines
         if not self.show_view.grasp_lines:
             QMessageBox.warning(self.widget,
@@ -231,7 +231,7 @@ class ActionView():
                                 QMessageBox.Ok)
 
     def handle_fine_up(self):
-        """理Up按钮点击的逻辑"""
+        """Handle Up button click logic"""
         if self.fine_up_button.styleSheet() == self.selected_style:
             # If already selected, cancel selection
             self.show_view.set_fine_tune_mode(None)
@@ -243,7 +243,7 @@ class ActionView():
             self.fine_down_button.setStyleSheet(self.normal_style)
 
     def handle_fine_down(self):
-        """处理Down按钮点击的逻辑"""
+        """Handle Down button click logic"""
         if self.fine_down_button.styleSheet() == self.selected_style:
             # If already selected, cancel selection
             self.show_view.set_fine_tune_mode(None)

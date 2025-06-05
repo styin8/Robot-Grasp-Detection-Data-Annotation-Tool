@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap, QImageReader, QImage, QFont, QPainter, QPen, QC
 import numpy as np
 from typing import Tuple
 import math
-from skimage.draw import polygon  # 添加到文件开头的导入语句中
+from skimage.draw import polygon  # Import polygon from skimage.draw
 
 
 class ClickableLabel(QLabel):
@@ -15,7 +15,7 @@ class ClickableLabel(QLabel):
 
     def mousePressEvent(self, event):
         if self.parent_view:
-            # 转换鼠标坐标到图片坐标系
+            # Convert mouse coordinates to image coordinates
             mapped_pos = self.parent_view.map_to_image_coordinates(event.pos())
             if mapped_pos:
                 event.mapped_pos = mapped_pos
@@ -23,7 +23,7 @@ class ClickableLabel(QLabel):
 
     def mouseMoveEvent(self, event):
         if self.parent_view:
-            # 转换鼠标坐标到图片坐标系
+            # Convert mouse coordinates to image coordinates
             mapped_pos = self.parent_view.map_to_image_coordinates(event.pos())
             if mapped_pos:
                 event.mapped_pos = mapped_pos
@@ -31,7 +31,7 @@ class ClickableLabel(QLabel):
 
     def mouseReleaseEvent(self, event):
         if self.parent_view:
-            # 转换鼠标坐标到图片坐标系
+            # Convert mouse coordinates to image coordinates
             mapped_pos = self.parent_view.map_to_image_coordinates(event.pos())
             if mapped_pos:
                 event.mapped_pos = mapped_pos
@@ -46,7 +46,7 @@ class ShowView():
         self.end_point = None
         self.current_pixmap = None
         self.temp_pixmap = None
-        self.image_rect = None  # 存储实际显示的图片区域
+        self.image_rect = None  # Store actual display area of the image
 
         self.origin_image = ClickableLabel(
             "Please add and select an image :)")
@@ -68,22 +68,22 @@ class ShowView():
         self.width_image = QLabel()
         self.width_image.setAlignment(Qt.AlignCenter)
 
-        # 添加标签
-        self.quality_label = QLabel("")  # 初始化时不显示文字
+        # Add labels
+        self.quality_label = QLabel("")  # Initialize without text
         self.quality_label.setAlignment(Qt.AlignCenter)
-        self.angle_label = QLabel("")    # 初始化时不显示文字
+        self.angle_label = QLabel("")    # Initialize without text
         self.angle_label.setAlignment(Qt.AlignCenter)
-        self.width_label = QLabel("")    # 初始化时不显示文字
+        self.width_label = QLabel("")    # Initialize without text
         self.width_label.setAlignment(Qt.AlignCenter)
 
-        # 创建颜色比例尺标签
+        # Create color scale labels
         self.colorbar_label = QLabel()
         self.width_colorbar_label = QLabel()
-        self.angle_colorbar_label = QLabel()  # 新增angle比例尺标签
+        self.angle_colorbar_label = QLabel()  # Add angle scale label
 
         self.colorbar_label.setFixedWidth(20)
         self.width_colorbar_label.setFixedWidth(20)
-        self.angle_colorbar_label.setFixedWidth(20)  # 设置宽度
+        self.angle_colorbar_label.setFixedWidth(20)  # Set width
 
         self.colorbar_label.setAlignment(Qt.AlignCenter)
         self.width_colorbar_label.setAlignment(Qt.AlignCenter)
@@ -156,57 +156,57 @@ class ShowView():
         self.layout.addWidget(self.origin_groupbox, 3)
         self.layout.addWidget(self.preview_groupbox, 2)
 
-        # 添加一个回调函数属性
+        # Add callback function property
         self.on_drawing_finished = None
 
-        # 添加新的存储抓取线的信息
-        self.grasp_lines = []  # 存储所有的抓取线信息
-        self.current_grasp_line = None  # 当前选中的抓取线
+        # Add new grasp line information storage
+        self.grasp_lines = []  # Store all grasp line information
+        self.current_grasp_line = None  # Currently selected grasp line
 
-        # 添加相关的属性
+        # Add related properties
         self.quality_map = None
         self.angle_map = None
         self.width_map = None
 
-        self.click_tolerance = 5  # 中心轴可点击范围的半宽度（总宽度为10px）
+        self.click_tolerance = 5  # Half width of center axis clickable area (total width 10px)
 
-        # 添加微调相关的属性
-        self.fine_tune_mode = None  # 'up', 'down', 或 'select'
-        self.fine_tune_radius = 10  # 修改为10（原来是20）
-        self.fine_tune_strength = 0.1  # 每次微调的强度
+        # Add fine-tuning related properties
+        self.fine_tune_mode = None  # 'up', 'down', or 'select'
+        self.fine_tune_radius = 10  # Changed to 10 (was 20)
+        self.fine_tune_strength = 0.1  # Fine-tuning strength per adjustment
 
-        # 修改鼠标跟踪
+        # Modify mouse tracking
         self.origin_image.setMouseTracking(True)
         self.origin_image.setCursor(Qt.ArrowCursor)
 
-        self.current_file_path = None  # 添加这一行
+        self.current_file_path = None  # Add this line
 
     def map_to_image_coordinates(self, pos):
-        """将窗口坐标映射到图片坐标"""
+        """Map window coordinates to image coordinates"""
         if not self.image_rect or not self.current_pixmap:
             return None
 
-        # 计算相对于图片显示区域的坐标
+        # Calculate coordinates relative to image display area
         x = pos.x() - self.image_rect.x()
         y = pos.y() - self.image_rect.y()
 
-        # 检查是否在图片区域内
+        # Check if within image area
         if x < 0 or y < 0 or x > self.image_rect.width() or y > self.image_rect.height():
             return None
 
         return QPoint(x, y)
 
     def update_image_rect(self):
-        """更新图片显示区域的信息"""
+        """Update image display area information"""
         if not self.current_pixmap:
             return
 
-        # 计算保持纵横比的缩放后图片大小
+        # Calculate scaled image size maintaining aspect ratio
         label_size = self.origin_image.size()
         scaled_size = self.current_pixmap.size().scaled(
             label_size, Qt.KeepAspectRatio)
 
-        # 计算图片在Label中的实际显示区域
+        # Calculate actual display area of image in Label
         x = (label_size.width() - scaled_size.width()) // 2
         y = (label_size.height() - scaled_size.height()) // 2
 
@@ -214,7 +214,7 @@ class ShowView():
             x, y, scaled_size.width(), scaled_size.height())
 
     def distance_to_line(self, point, line_start, line_end):
-        """计算点到线段的距离"""
+        """Calculate distance from point to line segment"""
         px = point[0]
         py = point[1]
         x1 = line_start[0]
@@ -222,25 +222,25 @@ class ShowView():
         x2 = line_end[0]
         y2 = line_end[1]
 
-        # 计算线段长度的平方
+        # Calculate square of line segment length
         l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2
 
         if l2 == 0:
-            # 如果线段长度为0，直接返回到端点的距离
+            # If line segment length is 0, return distance to endpoint
             return math.sqrt((px - x1) ** 2 + (py - y1) ** 2)
 
-        # 计算点到线段的投影位置参数 t
+        # Calculate projection position parameter t of point to line segment
         t = max(0, min(1, ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2))
 
-        # 计算投影点坐标
+        # Calculate projection point coordinates
         proj_x = x1 + t * (x2 - x1)
         proj_y = y1 + t * (y2 - y1)
 
-        # 返回点到投影点的距离
+        # Return distance from point to projection point
         return math.sqrt((px - proj_x) ** 2 + (py - proj_y) ** 2)
 
     def find_nearest_line(self, point):
-        """找到离点击位置最近的抓取线"""
+        """Find the grasp line nearest to click position"""
         if not self.grasp_lines:
             return None
 
@@ -261,38 +261,38 @@ class ShowView():
 
     def mousePressEvent(self, event):
         if self.fine_tune_mode in ['up', 'down'] and event.button() == Qt.LeftButton:
-            # 调用 update_quality_value 方法来更新值
+            # Call update_quality_value method to update value
             self.update_quality_value(event.mapped_pos)
         elif self.is_drawing and event.button() == Qt.LeftButton:
-            # 处理绘制模式下的点击
+            # Handle click in drawing mode
             self.start_point = event.mapped_pos
             if self.current_pixmap:
                 self.temp_pixmap = self.current_pixmap.copy()
         elif not self.is_drawing and event.button() == Qt.LeftButton:
-            # 非绘制模式下，检查是否点击了某条中心轴
+            # Non-drawing mode, check if clicked on a center axis
             clicked_point = (event.mapped_pos.x(), event.mapped_pos.y())
             nearest_line = self.find_nearest_line(clicked_point)
 
             if nearest_line:
-                # 更新当前选中的抓取线
+                # Update currently selected grasp line
                 self.current_grasp_line = nearest_line
 
-                # 重绘所有线，突出显示选中的线
+                # Redraw all lines, highlight selected line
                 if self.current_pixmap:
                     self.current_pixmap = self.temp_pixmap.copy()
                     painter = QPainter(self.current_pixmap)
 
-                    # 先绘制所有未选中的线
+                    # Draw all unselected lines first
                     for line in self.grasp_lines:
                         if line != self.current_grasp_line:
-                            # 绘制红色的中心轴
+                            # Draw red center axis
                             painter.setPen(QPen(Qt.red, 2, Qt.SolidLine))
                             painter.drawLine(
                                 int(line['start'][0]), int(line['start'][1]),
                                 int(line['end'][0]), int(line['end'][1])
                             )
 
-                            # 如果有垂直线，绘制蓝色的垂直线
+                            # If there's a perpendicular line, draw blue perpendicular line
                             if line['perp_line']:
                                 painter.setPen(QPen(Qt.blue, 2, Qt.SolidLine))
                                 painter.drawLine(
@@ -302,7 +302,7 @@ class ShowView():
                                     int(line['perp_line']['end'][1])
                                 )
 
-                    # 绘选中的线（使用更粗的线条）
+                    # Draw selected line (using thicker line)
                     painter.setPen(QPen(Qt.red, 4, Qt.SolidLine))
                     painter.drawLine(
                         int(self.current_grasp_line['start'][0]),
@@ -311,7 +311,7 @@ class ShowView():
                         int(self.current_grasp_line['end'][1])
                     )
 
-                    # 如果选中的线有垂直线，也用更粗的线条绘制
+                    # If selected line has perpendicular line, draw it with thicker line
                     if self.current_grasp_line['perp_line']:
                         painter.setPen(QPen(Qt.blue, 4, Qt.SolidLine))
                         painter.drawLine(
@@ -330,7 +330,7 @@ class ShowView():
 
     def mouseMoveEvent(self, event):
         if self.fine_tune_mode in ['up', 'down'] and event.buttons() & Qt.LeftButton:
-            # 当鼠标按下并移动时，也更新值
+            # When mouse is pressed and moved, also update value
             self.update_quality_value(event.mapped_pos)
         elif self.is_drawing and self.start_point:
             if self.temp_pixmap:
@@ -346,17 +346,17 @@ class ShowView():
         if self.is_drawing and event.button() == Qt.LeftButton and self.start_point:
             self.end_point = event.mapped_pos
             if self.current_pixmap:
-                # 创建新的抓取线信息
+                # Create new grasp line information
                 grasp_line = {
                     'start': (self.start_point.x(), self.start_point.y()),
                     'end': (self.end_point.x(), self.end_point.y()),
-                    'perp_line': None,  # 存储垂直线信息
-                    'length': None,     # 存储线段长度
-                    'center': None,     # 存储中心点
-                    'angle': None       # 存储角度
+                    'perp_line': None,  # Store perpendicular line information
+                    'length': None,     # Store line segment length
+                    'center': None,     # Store center point
+                    'angle': None       # Store angle
                 }
 
-                # 计算并存储抓取线的信息
+                # Calculate and store grasp line information
                 dx = self.end_point.x() - self.start_point.x()
                 dy = self.end_point.y() - self.start_point.y()
                 grasp_line['length'] = math.sqrt(dx*dx + dy*dy)
@@ -366,27 +366,27 @@ class ShowView():
                 )
                 grasp_line['angle'] = math.atan2(dy, dx)
 
-                # 添加到表中
+                # Add to table
                 self.grasp_lines.append(grasp_line)
 
-                # 设置为当前选中的线
+                # Set as currently selected line
                 self.current_grasp_line = grasp_line
 
-                # 新绘制所有线段
+                # Redraw all segments
                 self.current_pixmap = self.temp_pixmap.copy()
                 painter = QPainter(self.current_pixmap)
 
-                # 先绘制所有未选中的线
+                # Draw all unselected lines first
                 for line in self.grasp_lines:
                     if line != self.current_grasp_line:
-                        # 绘制红色的中心轴
+                        # Draw red center axis
                         painter.setPen(QPen(Qt.red, 2, Qt.SolidLine))
                         painter.drawLine(
                             int(line['start'][0]), int(line['start'][1]),
                             int(line['end'][0]), int(line['end'][1])
                         )
 
-                        # 如果有垂直线，绘制蓝色的垂直线
+                        # If there's a perpendicular line, draw blue perpendicular line
                         if line['perp_line']:
                             painter.setPen(QPen(Qt.blue, 2, Qt.SolidLine))
                             painter.drawLine(
@@ -396,7 +396,7 @@ class ShowView():
                                 int(line['perp_line']['end'][1])
                             )
 
-                # 绘制选中的线（使用更粗的线条）
+                # Draw selected line (using thicker line)
                 painter.setPen(QPen(Qt.red, 4, Qt.SolidLine))
                 painter.drawLine(
                     int(self.current_grasp_line['start'][0]),
@@ -409,7 +409,7 @@ class ShowView():
                 self.origin_image.setPixmap(
                     self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
 
-                # 保存当前图状
+                # Save current state
                 self.temp_pixmap = self.current_pixmap.copy()
 
                 print(
@@ -423,17 +423,17 @@ class ShowView():
                 self.on_drawing_finished()
 
     def draw_perpendicular_line(self, length_ratio=0.25):
-        """在当前选中取线中心绘制垂直线"""
+        """Draw perpendicular line at center of currently selected grasp line"""
         if not self.current_grasp_line:
             return False
 
-        # 计算垂直线的长度
+        # Calculate length of perpendicular line
         perp_length = self.current_grasp_line['length'] * length_ratio
 
-        # 计算垂直线的角度
+        # Calculate angle of perpendicular line
         perp_angle = self.current_grasp_line['angle'] + math.pi/2
 
-        # 计算垂直线的端点
+        # Calculate perpendicular line endpoints
         center = self.current_grasp_line['center']
         half_length = perp_length / 2
         start_x = center[0] - half_length * math.cos(perp_angle)
@@ -441,23 +441,23 @@ class ShowView():
         end_x = center[0] + half_length * math.cos(perp_angle)
         end_y = center[1] + half_length * math.sin(perp_angle)
 
-        # 存储垂直线信息
+        # Store perpendicular line information
         self.current_grasp_line['perp_line'] = {
             'start': (start_x, start_y),
             'end': (end_x, end_y),
             'length_ratio': length_ratio
         }
 
-        # 重绘所有线段
+        # Redraw all segments
         if self.current_pixmap:
             self.current_pixmap = self.temp_pixmap.copy()
             painter = QPainter(self.current_pixmap)
 
-            # 绘制所有抓取线
+            # Draw all grasp lines
             for line in self.grasp_lines:
-                # 先画红色的中心轴
+                # Draw red center axis first
                 if line == self.current_grasp_line:
-                    # 当前选中的线画粗一点
+                    # Current selected line draw thicker
                     painter.setPen(QPen(Qt.red, 4, Qt.SolidLine))
                 else:
                     painter.setPen(QPen(Qt.red, 2, Qt.SolidLine))
@@ -467,9 +467,9 @@ class ShowView():
                     int(line['end'][0]), int(line['end'][1])
                 )
 
-                # 如果有垂直线，绘制蓝色的垂直线
+                # If there's a perpendicular line, draw blue perpendicular line
                 if line['perp_line']:
-                    # 计算垂直线的端点
+                    # Calculate perpendicular line endpoints
                     center = line['center']
                     perp_length = line['length'] * \
                         line['perp_line']['length_ratio']
@@ -482,7 +482,7 @@ class ShowView():
                     end_y = center[1] + half_length * math.sin(perp_angle)
 
                     if line == self.current_grasp_line:
-                        # 当前选中的线的垂直线画粗一点
+                        # Current selected line's perpendicular line draw thicker
                         painter.setPen(QPen(Qt.blue, 4, Qt.SolidLine))
                     else:
                         painter.setPen(QPen(Qt.blue, 2, Qt.SolidLine))
@@ -499,24 +499,24 @@ class ShowView():
         return False
 
     def update_perpendicular_line(self, length_ratio):
-        """更新当前选中抓取线的垂直线长度"""
+        """Update length of perpendicular line of currently selected grasp line"""
         if not self.current_grasp_line:
             return False
 
-        # 更新当前选中线的垂直线长度比例
+        # Update length ratio of perpendicular line of currently selected line
         if self.current_grasp_line['perp_line']:
             self.current_grasp_line['perp_line']['length_ratio'] = length_ratio
 
-        # 重新绘制所有线段
+        # Redraw all segments
         if self.current_pixmap:
             self.current_pixmap = self.temp_pixmap.copy()
             painter = QPainter(self.current_pixmap)
 
-            # 绘制所有抓取线
+            # Draw all grasp lines
             for line in self.grasp_lines:
-                # 先画红色的中心轴
+                # Draw red center axis first
                 if line == self.current_grasp_line:
-                    # 当前选中的线画粗一点
+                    # Current selected line draw thicker
                     painter.setPen(QPen(Qt.red, 4, Qt.SolidLine))
                 else:
                     painter.setPen(QPen(Qt.red, 2, Qt.SolidLine))
@@ -526,9 +526,9 @@ class ShowView():
                     int(line['end'][0]), int(line['end'][1])
                 )
 
-                # 如果有垂直线，绘制蓝色的垂直线
+                # If there's a perpendicular line, draw blue perpendicular line
                 if line['perp_line']:
-                    # 计算垂直线的端点
+                    # Calculate perpendicular line endpoints
                     center = line['center']
                     perp_length = line['length'] * \
                         line['perp_line']['length_ratio']
@@ -541,7 +541,7 @@ class ShowView():
                     end_y = center[1] + half_length * math.sin(perp_angle)
 
                     if line == self.current_grasp_line:
-                        # 当前选中的线的垂直线画粗一点
+                        # Current selected line's perpendicular line draw thicker
                         painter.setPen(QPen(Qt.blue, 4, Qt.SolidLine))
                     else:
                         painter.setPen(QPen(Qt.blue, 2, Qt.SolidLine))
@@ -559,31 +559,31 @@ class ShowView():
 
     @staticmethod
     def init_label_image(width, height) -> Tuple[np.ndarray, QImage]:
-        # 确保宽度和高度是整数
+        # Ensure width and height are integers
         width = int(width)
         height = int(height)
-        # 使用灰色（128）而不是黑色（0）
-        image = np.full((height, width), 200, dtype=np.uint8)  # 使用浅灰色
+        # Use gray (128) instead of black (0)
+        image = np.full((height, width), 200, dtype=np.uint8)  # Use light gray
         qimage = QImage(image.data,
                         width, height,
-                        width,  # 加步长参数
+                        width,  # Add step length parameter
                         QImage.Format_Grayscale8)
         return image, qimage
 
     def generate_heatmaps(self):
-        """生成热力图，考虑所有已标注的抓取线"""
+        """Generate heatmap considering all labeled grasp lines"""
         if not self.image_rect or not self.grasp_lines:
             return False
 
-        # 获取原图尺寸
+        # Get original image size
         original_height = self.current_pixmap.height()
         original_width = self.current_pixmap.width()
 
-        # 获取预览图尺寸
+        # Get preview image size
         preview_height = original_height // 2
         preview_width = original_width // 2
 
-        # 创建热力图（使用预览图尺寸）
+        # Create heatmap (using preview image size)
         self.quality_map = np.zeros(
             (preview_height, preview_width), dtype=np.float32)
         self.angle_map = np.zeros(
@@ -591,53 +591,53 @@ class ShowView():
         self.width_map = np.zeros(
             (preview_height, preview_width), dtype=np.float32)
 
-        # 用于跟踪最大值
+        # Used to track maximum value
         max_angle = float('-inf')
         max_width = float('-inf')
 
-        # 在原图上绘制中心轴上的蓝线
+        # Draw blue lines on center axis of original image
         if self.current_pixmap:
             painter = QPainter(self.current_pixmap)
             painter.setPen(QPen(Qt.blue, 2, Qt.SolidLine))
 
-            # 遍历所有抓取线
+            # Iterate through all grasp lines
             for grasp_line in self.grasp_lines:
-                if not grasp_line['perp_line']:  # 跳过没有标注宽度的线
+                if not grasp_line['perp_line']:  # Skip lines without width annotation
                     continue
 
-                # 计算在中心轴上均匀分布的点
-                num_points = int(grasp_line['length'])  # 每个像素一个点
+                # Calculate points uniformly distributed on center axis
+                num_points = int(grasp_line['length'])  # One point per pixel
 
                 dx = (grasp_line['end'][0] -
                       grasp_line['start'][0]) / (num_points - 1)
                 dy = (grasp_line['end'][1] -
                       grasp_line['start'][1]) / (num_points - 1)
 
-                # 计算中心轴与x轴正方向的夹角
+                # Calculate angle between center axis and positive x-axis direction
                 dx_axis = grasp_line['end'][0] - grasp_line['start'][0]
                 dy_axis = -(grasp_line['end'][1] - grasp_line['start'][1])
                 angle_rad = math.atan2(dy_axis, dx_axis)
                 angle_deg = math.degrees(angle_rad)
 
-                # 确保角度在-90到90度之间
+                # Ensure angle is between -90 and 90 degrees
                 if angle_deg > 90:
                     angle_deg = angle_deg - 180
                 elif angle_deg < -90:
                     angle_deg = angle_deg + 180
 
-                # 更新最大角度值
+                # Update maximum angle value
                 max_angle = max(max_angle, abs(angle_deg))
 
                 prev_start_x, prev_start_y = None, None
                 prev_end_x, prev_end_y = None, None
 
-                # 在每个点上绘制垂直的蓝线并更新热力图
+                # Draw vertical blue lines and update heatmap at each point
                 for i in range(num_points):
-                    # 原坐标
+                    # Original coordinates
                     center_x = grasp_line['start'][0] + dx * i
                     center_y = grasp_line['start'][1] + dy * i
 
-                    # 计算垂直线的端点（原图坐标）
+                    # Calculate perpendicular line endpoints (original coordinates)
                     perp_length = grasp_line['length'] * \
                         grasp_line['perp_line']['length_ratio']
                     half_length = perp_length / 2
@@ -648,18 +648,18 @@ class ShowView():
                     end_x = center_x + half_length * math.cos(perp_angle)
                     end_y = center_y + half_length * math.sin(perp_angle)
 
-                    # 更新最大宽度值
+                    # Update maximum width value
                     max_width = max(max_width, perp_length)
 
-                    # 绘制垂直线（原图）
+                    # Draw vertical line (original)
                     painter.drawLine(
                         int(start_x), int(start_y),
                         int(end_x), int(end_y)
                     )
 
-                    # 在两个垂直线之间填充区域
-                    if i > 0:  # 从第二个点开始，连接前后两个垂直线
-                        # 创建多边形的顶点数组（缩放到预览图尺寸）
+                    # Fill area between two vertical lines
+                    if i > 0:  # From second point, connect previous and current vertical lines
+                        # Create polygon vertex array (scaled to preview image size)
                         poly_y = np.array([
                             int(prev_start_y * preview_height / original_height),
                             int(prev_end_y * preview_height / original_height),
@@ -673,11 +673,11 @@ class ShowView():
                             int(start_x * preview_width / original_width)
                         ])
 
-                        # 使用polygon函数获取多边形内的所有点
+                        # Use polygon function to get all points inside polygon
                         rr, cc = polygon(
                             poly_y, poly_x, shape=(preview_height, preview_width))
 
-                        # 计算中心线的点（缩放到预览图尺寸）
+                        # Calculate center line points (scaled to preview image size)
                         center_line_start = np.array([
                             int((prev_start_x + prev_end_x) / 2 *
                                 preview_width / original_width),
@@ -691,53 +691,53 @@ class ShowView():
                                 preview_height / original_height)
                         ])
 
-                        # 为多边形区域内的每个点计算高斯值
+                        # Calculate Gaussian value for each point inside polygon
                         for y, x in zip(rr, cc):
                             point = np.array([x, y])
-                            # 计算点到中心线的距离
+                            # Calculate distance from point to center line
                             dist = self.point_to_line_distance(
                                 point, center_line_start, center_line_end)
-                            # 计算高斯值（sigma可以调整来改变分布的宽度）
+                            # Calculate Gaussian value (sigma can be adjusted to change distribution width)
                             sigma = perp_length / \
                                 (4 * original_height /
-                                 preview_height)  # 调整sigma以适应预览图尺寸
+                                 preview_height)  # Adjust sigma to fit preview image size
                             gaussian_value = np.exp(-0.5 *
                                                     (dist ** 2) / (sigma ** 2))
 
-                            # 更新quality map（使用高斯值）
+                            # Update quality map (using Gaussian value)
                             self.quality_map[y, x] = max(
                                 self.quality_map[y, x], gaussian_value)
-                            # 更新其他map（保持不变）
+                            # Update other maps (keep unchanged)
                             self.width_map[y, x] = perp_length
                             self.angle_map[y, x] = angle_deg
 
-                    # 更新前一个点的坐标
+                    # Update previous point coordinates
                     prev_start_x, prev_start_y = start_x, start_y
                     prev_end_x, prev_end_y = end_x, end_y
 
-            print(f"最大角度值: {angle_deg:.2f}°")
-            print(f"最大宽度值: {perp_length:.2f}")
+            print(f"Maximum angle value: {angle_deg:.2f}°")
+            print(f"Maximum width value: {perp_length:.2f}")
 
             painter.end()
             self.origin_image.setPixmap(
                 self.current_pixmap.scaled(640, 480, Qt.KeepAspectRatio))
 
-            # 更新预览图显示
+            # Update preview image display
             self.update_preview_images()
             return True
 
     def update_preview_images(self):
-        """更新预览图的显示"""
+        """Update preview image display"""
         if all([self.quality_map is not None,
                 self.angle_map is not None,
                 self.width_map is not None]):
 
-            # 转换为uint8类型并应用颜色映射
+            # Convert to uint8 type and apply color mapping
             quality_colored = self.apply_colormap(self.quality_map)
             angle_colored = self.apply_colormap(self.angle_map)
             width_colored = self.apply_colormap(self.width_map)
 
-            # 创建QImage并显示
+            # Create QImage and display
             h, w = self.quality_map.shape
 
             quality_qimage = QImage(
@@ -752,51 +752,51 @@ class ShowView():
                                   h, w * 3, QImage.Format_RGB888)
             self.width_image.setPixmap(QPixmap.fromImage(width_qimage))
 
-            # 创建并更新颜色比例尺
+            # Create and update color scale
             self.update_colorbar(h)
             self.update_width_colorbar(h)
-            self.update_angle_colorbar(h)  # 新增
+            self.update_angle_colorbar(h)  # Add
 
     def apply_colormap(self, data):
-        """应用热力图颜色映射"""
-        # 创建彩色图像
+        """Apply heatmap color mapping"""
+        # Create colored image
         colored = np.zeros((data.shape[0], data.shape[1], 3), dtype=np.uint8)
 
-        # 根据不同类型的数据使用不同的归一化方法
+        # Use different normalization methods based on different types of data
         if data is self.quality_map:
-            # quality_map 已经是 0-1 范围，直接使用
+            # quality_map is already 0-1 range, directly use
             normalized_data = np.clip(data, 0, 1)
         elif data is self.angle_map:
-            # angle_map 范围是 -90 到 90，归一化到 0-1
+            # angle_map range is -90 to 90, normalize to 0-1
             normalized_data = (data + 90) / 180
         elif data is self.width_map:
-            # width_map 范围是 0 到 150，归一化到 0-1
+            # width_map range is 0 to 150, normalize to 0-1
             normalized_data = data / 150
         else:
-            # 默认情况，假设数据已经归一化
+            # Default case, assume data is already normalized
             normalized_data = np.clip(data, 0, 1)
 
-        # 转换为uint8类型
+        # Convert to uint8 type
         data_uint8 = (normalized_data * 255).astype(np.uint8)
 
-        # 应用颜色映射（红色到蓝色渐变）
-        colored[..., 0] = data_uint8  # 红色通道
-        colored[..., 2] = 255 - data_uint8  # 蓝色通道
+        # Apply color mapping (red to blue gradient)
+        colored[..., 0] = data_uint8  # Red channel
+        colored[..., 2] = 255 - data_uint8  # Blue channel
 
         return colored
 
     def set_fine_tune_mode(self, mode):
-        """设置微调模式"""
+        """Set fine-tuning mode"""
         self.fine_tune_mode = mode
         if mode in ['up', 'down']:
-            # 创建圆形光标
+            # Create circular cursor
             cursor = self.create_circle_cursor()
             self.origin_image.setCursor(cursor)
         else:
             self.origin_image.setCursor(Qt.ArrowCursor)
 
     def create_circle_cursor(self):
-        """创建圆形光标"""
+        """Create circular cursor"""
         cursor_size = self.fine_tune_radius * 2
         pixmap = QPixmap(cursor_size, cursor_size)
         pixmap.fill(Qt.transparent)
@@ -809,15 +809,15 @@ class ShowView():
         return QCursor(pixmap)
 
     def update_colorbar(self, height):
-        """更新quality热力图的颜色比例"""
-        # 创建一个垂直的颜色渐变条
+        """Update quality heatmap color scale"""
+        # Create a vertical color gradient bar
         colorbar = np.zeros((height, 20, 3), dtype=np.uint8)
         for i in range(height):
-            value = 1.0 - (i / height)  # 从上到下，值从1降到0
-            colorbar[i, :, 0] = int(value * 255)  # 红色通道
-            colorbar[i, :, 2] = int((1 - value) * 255)  # 蓝色通道
+            value = 1.0 - (i / height)  # From top to bottom, value from 1 to 0
+            colorbar[i, :, 0] = int(value * 255)  # Red channel
+            colorbar[i, :, 2] = int((1 - value) * 255)  # Blue channel
 
-        # 添加最大值和最小值标签
+        # Add maximum and minimum value labels
         font = QPainter()
         colorbar_pixmap = QPixmap(20, height)
         colorbar_qimage = QImage(
@@ -828,26 +828,26 @@ class ShowView():
         painter.setPen(Qt.black)
         painter.setFont(QFont('Arial', 8))
 
-        # 在顶部绘制最大值
+        # Draw maximum value at top
         painter.drawText(0, 10, "1.0")
-        # 在中间绘制中间值
+        # Draw middle value
         painter.drawText(0, height//2, "0.5")
-        # 在底部绘制最小值
+        # Draw minimum value
         painter.drawText(0, height-2, "0.0")
 
         painter.end()
         self.colorbar_label.setPixmap(colorbar_pixmap)
 
     def update_width_colorbar(self, height):
-        """更新width热力图的颜色比例尺"""
-        # 创建一个垂直的颜色渐变条
+        """Update width heatmap color scale"""
+        # Create a vertical color gradient bar
         colorbar = np.zeros((height, 20, 3), dtype=np.uint8)
         for i in range(height):
-            value = 1.0 - (i / height)  # 从上到下，值从1降到0
-            colorbar[i, :, 0] = int(value * 255)  # 红色通道
-            colorbar[i, :, 2] = int((1 - value) * 255)  # 蓝色通道
+            value = 1.0 - (i / height)  # From top to bottom, value from 1 to 0
+            colorbar[i, :, 0] = int(value * 255)  # Red channel
+            colorbar[i, :, 2] = int((1 - value) * 255)  # Blue channel
 
-        # 添加最大值和最小值标签
+        # Add maximum and minimum value labels
         font = QPainter()
         colorbar_pixmap = QPixmap(20, height)
         colorbar_qimage = QImage(
@@ -858,26 +858,26 @@ class ShowView():
         painter.setPen(Qt.black)
         painter.setFont(QFont('Arial', 8))
 
-        # 在顶部绘制最大值
+        # Draw maximum value at top
         painter.drawText(0, 10, "150")
-        # 在中间绘制中间值
+        # Draw middle value
         painter.drawText(0, height//2, "75")
-        # 在底部绘制最小值
+        # Draw minimum value
         painter.drawText(0, height-2, "0")
 
         painter.end()
         self.width_colorbar_label.setPixmap(colorbar_pixmap)
 
     def update_angle_colorbar(self, height):
-        """更新angle热力图的颜色比例尺"""
-        # 创建一个垂直的颜色渐变条
+        """Update angle heatmap color scale"""
+        # Create a vertical color gradient bar
         colorbar = np.zeros((height, 20, 3), dtype=np.uint8)
         for i in range(height):
-            value = 1.0 - (i / height)  # 从上到下，值从1降到0
-            colorbar[i, :, 0] = int(value * 255)  # 红色通道
-            colorbar[i, :, 2] = int((1 - value) * 255)  # 蓝色通道
+            value = 1.0 - (i / height)  # From top to bottom, value from 1 to 0
+            colorbar[i, :, 0] = int(value * 255)  # Red channel
+            colorbar[i, :, 2] = int((1 - value) * 255)  # Blue channel
 
-        # 添加最大值和最小值标签
+        # Add maximum and minimum value labels
         font = QPainter()
         colorbar_pixmap = QPixmap(20, height)
         colorbar_qimage = QImage(
@@ -888,11 +888,11 @@ class ShowView():
         painter.setPen(Qt.black)
         painter.setFont(QFont('Arial', 8))
 
-        # 在顶部绘制最大值
+        # Draw maximum value at top
         painter.drawText(0, 10, "90°")
-        # 在中间绘制中间值
+        # Draw middle value
         painter.drawText(0, height//2, "0°")
-        # 在底部绘制最小值
+        # Draw minimum value
         painter.drawText(0, height-2, "-90°")
 
         painter.end()
@@ -900,9 +900,9 @@ class ShowView():
 
     def point_in_quadrilateral(self, point, quad_points):
         """
-        判断点是否在四边形内部
-        point: 要检查的点 [x, y]
-        quad_points: 四边形的四个顶点 [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+        Check if point is inside quadrilateral
+        point: Point to check [x, y]
+        quad_points: Four vertices of quadrilateral [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
         """
         def sign(p1, p2, p3):
             return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
@@ -918,7 +918,7 @@ class ShowView():
         return not (has_neg and has_pos)
 
     def point_to_line_distance(self, point, line_start, line_end):
-        """计算点到线段的距离"""
+        """Calculate distance from point to line segment"""
         if np.array_equal(line_start, line_end):
             return np.linalg.norm(point - line_start)
 
@@ -937,23 +937,23 @@ class ShowView():
             return np.linalg.norm(point - projection)
 
     def update_quality_value(self, pos):
-        """更新quality map的值"""
-        # 转换为预览图坐标
+        """Update value of quality map"""
+        # Convert to preview image coordinates
         preview_x = int(pos.x() / 2)
         preview_y = int(pos.y() / 2)
 
-        # 更新quality map
+        # Update quality map
         if self.quality_map is not None:
             height, width = self.quality_map.shape
-            radius = self.fine_tune_radius // 2  # 预览图上的半径
+            radius = self.fine_tune_radius // 2  # Preview image radius
 
-            # 在圆形区域内更新值
+            # Update value in circular area
             for y in range(max(0, preview_y - radius), min(height, preview_y + radius)):
                 for x in range(max(0, preview_x - radius), min(width, preview_x + radius)):
-                    # 计算到中心的距离
+                    # Calculate distance to center
                     dist = math.sqrt((x - preview_x) ** 2 + (y - preview_y)**2)
                     if dist <= radius:
-                        # 使用高斯衰减
+                        # Use Gaussian decay
                         factor = math.exp(-(dist**2)/(2*(radius/2)**2))
                         if self.fine_tune_mode == 'up':
                             self.quality_map[y, x] = min(
@@ -962,5 +962,5 @@ class ShowView():
                             self.quality_map[y, x] = max(
                                 0.0, self.quality_map[y, x] - self.fine_tune_strength * factor)
 
-            # 更新预览图显示
+            # Update preview image display
             self.update_preview_images()
