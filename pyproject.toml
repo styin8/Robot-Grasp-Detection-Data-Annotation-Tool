@@ -1,5 +1,5 @@
 [project]
-name = "Robot Grasp Detection Data Annotation Software"
+name = "Robot Grasp Detection Data Annotation Tool"
 version = "0.1.0"
 description = "..."
 readme = "README.md"

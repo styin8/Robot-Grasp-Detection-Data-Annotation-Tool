@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # Window Settings
-        self.setWindowTitle("Robot Grasp Detection Data Annotation Software")
+        self.setWindowTitle("Robot Grasp Detection Data Annotation Tool")
 
         # Set Menu
         menubar = self.menuBar()

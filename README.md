@@ -100,7 +100,7 @@ The application processes data files with the following specifications:
 - Channels:
   - Channel 1: Grasp quality (0-1)
   - Channel 2: Grasp angle (-90° to 90°)
-  - Channel 3: Grasp width (0-150mm)
+  - Channel 3: Grasp width (0-150 units)
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -111,4 +111,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 If you have any questions or suggestions, please feel free to contact us:
 - Email: styin8@gmail.com
-- Issue: [Create an issue](https://github.com/styin8/data-collection/issues)
+- Issue: [Create an issue](https://github.com/styin8/data-collection-master/issues)

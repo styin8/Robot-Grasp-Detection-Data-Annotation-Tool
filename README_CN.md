@@ -90,7 +90,7 @@ pip install -r requirements.txt
 3. 数据可视化：
    - 质量可视化（0-1范围）
    - 角度可视化（-90°到90°）
-   - 宽度可视化（0-150mm）
+   - 宽度可视化（0-150 单位）
    - 三角函数分解视图
 
 ## 数据格式
@@ -111,4 +111,4 @@ pip install -r requirements.txt
 ## 联系方式
 如果您有任何问题或建议，请随时联系我们：
 - 邮箱：styin8@gmail.com
-- 问题：[创建 issue](https://github.com/styin8/data-collection/issues) 
+- 问题：[创建 issue](https://github.com/styin8/data-collection-master/issues) 
