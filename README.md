@@ -53,7 +53,7 @@ A PyQt5-based desktop application designed for annotating robot grasp detection 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone the repository
-git clone https://github.com/yourusername/data-collection.git
+git clone https://github.com/styin8/data-collection.git
 cd data-collection
 
 # Create and activate virtual environment using uv
@@ -69,7 +69,7 @@ uv sync
 ### Option 2: Using pip
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/data-collection.git
+git clone https://github.com/styin8/data-collection.git
 cd data-collection
 
 # Install dependencies
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 3. Data Visualization:
    - Quality visualization (0-1 range)
    - Angle visualization (-90° to 90°)
-   - Width visualization (0-150mm)
+   - Width visualization (0-150 units)
    - Trigonometric decomposition view
 
 ## Data Format
@@ -110,5 +110,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 If you have any questions or suggestions, please feel free to contact us:
-- Email: your.email@example.com
-- Issue: [Create an issue](https://github.com/yourusername/data-collection/issues)
+- Email: styin8@gmail.com
+- Issue: [Create an issue](https://github.com/styin8/data-collection/issues)

@@ -53,7 +53,7 @@
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 克隆仓库
-git clone https://github.com/yourusername/data-collection.git
+git clone https://github.com/styin8/data-collection.git
 cd data-collection
 
 # 使用 uv 创建并激活虚拟环境
@@ -69,7 +69,7 @@ uv sync
 ### 方式二：使用 pip
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/data-collection.git
+git clone https://github.com/styin8/data-collection.git
 cd data-collection
 
 # 安装依赖
@@ -100,7 +100,7 @@ pip install -r requirements.txt
 - 通道：
   - 通道1：抓取质量（0-1）
   - 通道2：抓取角度（-90°到90°）
-  - 通道3：抓取宽度（0-150mm）
+  - 通道3：抓取宽度（0-150 单位）
 
 ## 贡献
 欢迎提交贡献！请随时提交 Pull Request。
@@ -110,5 +110,5 @@ pip install -r requirements.txt
 
 ## 联系方式
 如果您有任何问题或建议，请随时联系我们：
-- 邮箱：your.email@example.com
-- 问题：[创建 issue](https://github.com/yourusername/data-collection/issues) 
+- 邮箱：styin8@gmail.com
+- 问题：[创建 issue](https://github.com/styin8/data-collection/issues) 
