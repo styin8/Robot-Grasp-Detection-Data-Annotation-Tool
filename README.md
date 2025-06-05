@@ -111,4 +111,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 If you have any questions or suggestions, please feel free to contact us:
 - Email: styin8@gmail.com
-- Issue: [Create an issue](https://github.com/styin8/data-collection-master/issues)
+- Issue: [Create an issue](https://github.com/styin8/Robot-Grasp-Detection-Data-Annotation-Tool/issues)
