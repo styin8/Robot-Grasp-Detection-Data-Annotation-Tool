@@ -111,4 +111,4 @@ pip install -r requirements.txt
 ## 联系方式
 如果您有任何问题或建议，请随时联系我们：
 - 邮箱：styin8@gmail.com
-- 问题：[创建 issue](https://github.com/styin8/data-collection-master/issues) 
+- 问题：[创建 issue](https://github.com/styin8/Robot-Grasp-Detection-Data-Annotation-Tool/issues) 
